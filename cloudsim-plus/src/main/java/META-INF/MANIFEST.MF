@@ -1,0 +1,7 @@
+Manifest-Version: 1.0
+Main-Class: 
+Class-Path: javax.mail-1.6.0.jar commons-collections4-4.1.jar logback-cl
+ assic-1.3.0-alpha4.jar gson-2.8.2.jar activation-1.1.jar slf4j-api-1.8.
+ 0-beta2.jar logback-core-1.3.0-alpha4.jar commons-math3-3.6.1.jar commo
+ ns-lang3-3.8.1.jar
+

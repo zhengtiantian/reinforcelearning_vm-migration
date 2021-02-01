@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="9ebdab04-db3c-4b8b-992e-8296636d7a11" name="Default Changelist" comment="" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="MavenImportPreferences">
+    <option name="generalSettings">
+      <MavenGeneralSettings>
+        <option name="localRepository" value="$PROJECT_DIR$/../../apache-maven-3.6.3/warehouse" />
+        <option name="userSettingsFile" value="$PROJECT_DIR$/../../apache-maven-3.6.3/conf/settings.xml" />
+      </MavenGeneralSettings>
+    </option>
+  </component>
+  <component name="ProjectId" id="1lLqG8givK1Df57MTWkDMPYq3bc" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="aspect.path.notification.shown" value="true" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="node.js.detected.package.eslint" value="true" />
+    <property name="node.js.detected.package.tslint" value="true" />
+    <property name="node.js.path.for.package.eslint" value="project" />
+    <property name="node.js.path.for.package.tslint" value="project" />
+    <property name="node.js.selected.package.eslint" value="(autodetect)" />
+    <property name="node.js.selected.package.tslint" value="(autodetect)" />
+    <property name="project.structure.last.edited" value="Global Libraries" />
+    <property name="project.structure.proportion" value="0.15" />
+    <property name="project.structure.side.proportion" value="0.2" />
+    <property name="restartRequiresConfirmation" value="false" />
+    <property name="settings.editor.selected.configurable" value="reference.settings.project.maven.ignored.files" />
+  </component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$" />
+      <recent name="$PROJECT_DIR$/src/main/java" />
+      <recent name="D:\onedrive\project\java project\final project" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="D:\onedrive\project\java project\final project\src\main\java" />
+    </key>
+    <key name="MoveClassesOrPackagesDialog.RECENTS_KEY">
+      <recent name="" />
+    </key>
+  </component>
+  <component name="RunManager">
+    <configuration name="agent" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="ALTERNATIVE_JRE_PATH" value="1.8" />
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="true" />
+      <option name="MAIN_CLASS_NAME" value="agent" />
+      <module name="finalProject" />
+      <option name="PROGRAM_PARAMETERS" value="$MAVEN_REPOSITORY$" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Application.agent" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="9ebdab04-db3c-4b8b-992e-8296636d7a11" name="Default Changelist" comment="" />
+      <created>1607386622053</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1607386622053</updated>
+      <workItem from="1607386623144" duration="428000" />
+      <workItem from="1607387076033" duration="1875000" />
+      <workItem from="1607397283980" duration="1339000" />
+      <workItem from="1607729630035" duration="69000" />
+      <workItem from="1607882480924" duration="38000" />
+      <workItem from="1608652392537" duration="1424000" />
+      <workItem from="1608654879053" duration="1770000" />
+      <workItem from="1608657209884" duration="358000" />
+      <workItem from="1608657601285" duration="517000" />
+      <workItem from="1608658134999" duration="82000" />
+      <workItem from="1608663300933" duration="2700000" />
+      <workItem from="1608744891230" duration="2621000" />
+      <workItem from="1609016714085" duration="1114000" />
+      <workItem from="1609019982206" duration="5045000" />
+      <workItem from="1609082150401" duration="39000" />
+      <workItem from="1609337384973" duration="1715000" />
+      <workItem from="1609341475907" duration="5219000" />
+      <workItem from="1610215540915" duration="7082000" />
+      <workItem from="1610380041286" duration="47000" />
+      <workItem from="1610793885711" duration="314000" />
+      <workItem from="1611417967174" duration="13549000" />
+      <workItem from="1611506615839" duration="9314000" />
+      <workItem from="1611519305459" duration="1864000" />
+      <workItem from="1611538915382" duration="24000" />
+      <workItem from="1611597749611" duration="2098000" />
+      <workItem from="1611690311387" duration="1854000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="XSLT-Support.FileAssociations.UIState">
+    <expand />
+    <select />
+  </component>
+</project>
