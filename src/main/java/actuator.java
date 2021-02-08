@@ -12,12 +12,19 @@ public class actuator {
     /**
      * state the cpu utilization of the host
      * 0:  0%
-     * 1:  0%<utilization<=25%
-     * 2: 25%<utilization<=50%
-     * 3: 50%<utilization<=75%
-     * 4: 75%<utilization<=100%
+     * 1:  0%<utilization<=10%
+     * 2: 10%<utilization<=20%
+     * 3: 20%<utilization<=30%
+     * 4: 30%<utilization<=40%
+     * 5: 40%<utilization<=50%
+     * 6: 50%<utilization<=60%
+     * 7: 60%<utilization<=70%
+     * 8: 70%<utilization<=80%
+     * 9: 80%<utilization<=90%
+     * 10: 90%<utilization<=100%
      */
-    static int[] state = new int[]{0, 1, 2, 3, 4};
+    //TODO maybe need to adjust
+    static int[] state = new int[]{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
 
     //Q table
     static double[][] qtable;
@@ -48,13 +55,11 @@ public class actuator {
 
     //get the valueble action depend on the state
     public int getAction(int state) {
-
         if (Math.random() < threshold) {
             return action[new Random().nextInt(action.length)];
         } else {
             return getValuebleAct(qtable[state]);
         }
-
     }
 
     private int getValuebleAct(double[] doubles) {

@@ -72,6 +72,8 @@ public class dataCenter {
         return host;
     }
 
-
+    public int getHostPes(){
+        return HOST_PES;
+    }
 
 }

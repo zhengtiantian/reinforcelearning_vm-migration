@@ -38,6 +38,10 @@ public class envirnment {
         return dataCenterBroker;
     }
 
+    public dataCenter getDataCenter(){
+        return dataCenter;
+    }
+
 
     //01/12/2020
     private void onClockTickListener(EventInfo evt) {

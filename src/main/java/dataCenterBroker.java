@@ -81,4 +81,8 @@ public class dataCenterBroker {
     public void createVmsAndCloudlet(CloudletVmEventInfo cloudletVmEventInfo) {
         createVmsAndCloudlet(4, 1);
     }
+
+    public int getVmPes(){
+        return VM_PES;
+    }
 }

@@ -1,15 +1,17 @@
+import javafx.util.Pair;
 import org.cloudbus.cloudsim.cloudlets.Cloudlet;
 import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.hosts.Host;
+import org.cloudbus.cloudsim.resources.Ram;
+import org.cloudbus.cloudsim.vms.Vm;
 import po.Info;
 import util.Conversion;
 
-import java.util.DoubleSummaryStatistics;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
 public class agent {
 
@@ -26,6 +28,12 @@ public class agent {
     private static int INTERVAL_INT = 1000;
 
     private static Cloudlet cloudlet;
+
+    private static double HOST_PES = envirnment.getDataCenter().getHostPes();
+
+    private static double VM_PES = envirnment.getDataCenterBroker().getVmPes();
+
+    private static int STUDYTIMESWHENFILLED = 3;
 
 
     public static void main(String[] args) {
@@ -91,23 +99,112 @@ public class agent {
 
     private void migrateVms(Info info) {
         List<Host> hostList = info.getDatacenter().getHostList();
-        double totalPower = 0;
-        for (Host host : hostList) {
-            totalPower += host.getPowerModel().getPower(host.getCpuPercentUtilization());
-        }
+        Map<Long, Double> hostMap = hostList.stream().collect(Collectors.toMap(Host::getId, Host::getCpuPercentUtilization));
+        double totalPower = getTotalPower(hostList, hostMap);
+
 
         for (Host host : hostList) {
             int state = act.getStateByCpuUtilizition(host.getCpuPercentUtilization());
 
             int action = act.getAction(state);
-            if (action == 1 || action == 2) {
-                //calculate how many vms should move out, if all of vms can be placed, then do it, otherwise do nothing.
-                //if can't be placed, update the Qtable.
+
+            Pair<Boolean, List<Pair<Vm, Host>>> pair = canDo(action, host, hostList, hostMap, totalPower);
+            if (pair.getKey()) {
+                migrate(action,pair.getValue());
+            } else {
+                boolean canDo = false;
+                int iterateTimes = 0;
+                while (canDo && iterateTimes < STUDYTIMESWHENFILLED) {
+                    if (action == 1) {
+                        int nextState = act.getStateByCpuUtilizition(hostMap.get(host.getId()));
+                        act.updateQtable(state, action, -10, nextState);
+                    }
+                    if (action == 2) {
+                        act.updateQtable(state, action, -10, 0);
+                    }
+                    Pair<Boolean, List<Pair<Vm, Host>>> pair1 = canDo(action, host, hostList, hostMap, totalPower);
+                    if (pair1.getKey()) {
+                        migrate(action,pair1.getValue());
+                        break;
+                    }
+                }
+
             }
+
+            totalPower = getTotalPower(hostList, hostMap);
         }
 
 
     }
+
+    public void migrate(int action,List<Pair<Vm, Host>> vmHostList){
+        if (action == 1) {
+            Pair<Vm, Host> vmHostPair = vmHostList.get(0);
+            envirnment.getDatacenter().requestVmMigration(vmHostPair.getKey(), vmHostPair.getValue());
+        }
+        if (action == 2) {
+            for (Pair<Vm, Host> vmHostPair : vmHostList) {
+                envirnment.getDatacenter().requestVmMigration(vmHostPair.getKey(), vmHostPair.getValue());
+            }
+
+        }
+    }
+
+
+    private Pair<Boolean, List<Pair<Vm, Host>>> canDo(int action, Host host, List<Host> hostList, Map<Long, Double> hostMap, double totalPower) {
+        if (action == 0) {
+            Pair<Boolean, List<Pair<Vm, Host>>> pair = canDoAction2(host, hostList, hostMap, totalPower);
+            if (pair.getKey()) {
+                return new Pair<>(false, new ArrayList<>());
+            }
+            Pair<Boolean, List<Pair<Vm, Host>>> pair1 = canDoAction1(host, hostList, hostMap, totalPower);
+            if (pair1.getKey()) {
+                return new Pair<>(false, new ArrayList<>());
+            }
+            return new Pair<>(true, new ArrayList<>());
+        }
+        if (action == 1) {
+            Pair<Boolean, List<Pair<Vm, Host>>> pair = canDoAction2(host, hostList, hostMap, totalPower);
+            if (pair.getKey()) {
+                return new Pair<>(false, new ArrayList<>());
+            }
+            return canDoAction1(host, hostList, hostMap, totalPower);
+        }
+        if (action == 2) {
+            return canDoAction2(host, hostList, hostMap, totalPower);
+        }
+        return new Pair<>(false, new ArrayList<>());
+    }
+
+    private Pair<Boolean, List<Pair<Vm, Host>>> canDoAction1(Host host, List<Host> hostList, Map<Long, Double> hostMap, double totalPower) {
+        //TODO finish it
+        return new Pair<>(false, new ArrayList<>());
+    }
+
+    private Pair<Boolean, List<Pair<Vm, Host>>> canDoAction2(Host host, List<Host> hostList, Map<Long, Double> hostMap, double totalPower) {
+        double utilization = host.getCpuPercentUtilization();
+        double sumFreeUt = 0.0;
+        for (Host host1 : hostList) {
+            sumFreeUt += (100 - host1.getCpuPercentUtilization());
+        }
+        if (utilization > sumFreeUt) {
+            return new Pair<>(false, null);
+        }
+
+        //TODO Polling strategy or minimum allocation strategy?
+        //TODO update HostMap
+        return new Pair<>(true, new ArrayList<>());
+    }
+
+
+    private double getTotalPower(List<Host> hostList, Map<Long, Double> hostMap) {
+        double totalPower = 0.0;
+        for (Host host : hostList) {
+            totalPower += host.getPowerModel().getPower(hostMap.get(host.getId()));
+        }
+        return totalPower;
+    }
+
 
     private void iniQtable() {
         act.initQtalbe();
@@ -133,67 +230,13 @@ public class agent {
      * @return
      */
     public int getReward(int state, int action, int nextState) {
-
-        if (state == 1) {
-            if (action == 1 || action == 2) {
-                return 20;
-            }
-
+        if (action == 2) {
+            return state * 10;
+        } else if (action == 1 && state > nextState) {
+            return (state - nextState) * 10;
+        } else {
+            return 0;
         }
-
-        if (state == 2) {
-            if (action == 1) {
-                if (nextState == 0) {
-                    return 40;
-                }
-                if (nextState == 1) {
-                    return 20;
-                }
-            }
-            if (action == 2) {
-                return 40;
-            }
-        }
-
-        if (state == 3) {
-            if (action == 1) {
-                if (nextState == 0) {
-                    return 60;
-                }
-                if (nextState == 1) {
-                    return 40;
-                }
-
-                if (nextState == 2) {
-                    return 20;
-                }
-            }
-            if (action == 2) {
-                return 60;
-            }
-        }
-
-        if (state == 4) {
-            if (action == 1) {
-                if (nextState == 0) {
-                    return 80;
-                }
-                if (nextState == 1) {
-                    return 60;
-                }
-
-                if (nextState == 2) {
-                    return 40;
-                }
-                if (nextState == 3) {
-                    return 20;
-                }
-            }
-            if (action == 2) {
-                return 80;
-            }
-        }
-        return 0;
     }
 
     private void listenBroker() {
