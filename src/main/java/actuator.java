@@ -96,5 +96,23 @@ public class actuator {
         return state;
     }
 
+    /**
+     * reward range is 0-100
+     * the action will get more scores when save more power
+     *
+     * @param state
+     * @param action
+     * @param nextState
+     * @return
+     */
+    public int getReward(int state, int action, int nextState) {
+        if (action == 2) {
+            return state * 10;
+        } else if (action == 1 && state > nextState) {
+            return (state - nextState) * 10;
+        } else {
+            return 0;
+        }
+    }
 
 }

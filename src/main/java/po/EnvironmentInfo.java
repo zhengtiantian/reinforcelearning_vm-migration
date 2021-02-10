@@ -3,7 +3,7 @@ package po;
 import org.cloudbus.cloudsim.brokers.DatacenterBroker;
 import org.cloudbus.cloudsim.datacenters.Datacenter;
 
-public class Info {
+public class EnvironmentInfo {
 
     private Datacenter datacenter;
 
