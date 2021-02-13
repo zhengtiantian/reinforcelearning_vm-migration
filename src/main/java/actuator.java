@@ -23,7 +23,6 @@ public class actuator {
      * 9: 80%<utilization<=90%
      * 10: 90%<utilization<=100%
      */
-    //TODO maybe need to adjust
     static int[] state = new int[]{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
 
     //Q table

@@ -4,9 +4,9 @@ import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.hosts.Host;
 import org.cloudbus.cloudsim.vms.Vm;
 import po.EnvironmentInfo;
+import po.ExpectedResult;
 import po.HostAndCpuUtilization;
 import po.VmToHost;
-import util.Conversion;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -112,23 +112,23 @@ public class agent {
 
             int action = act.getAction(state);
 
-            Pair<Boolean, List<VmToHost>> pair = canDo(action, host, hostList, hostCpuMap, totalPower);
-            if (pair.getKey()) {
-                migrate(action, pair.getValue());
+            ExpectedResult result = canDo(action, host, hostList, hostCpuMap, totalPower);
+            int nextState = act.getStateByCpuUtilizition(hostCpuMap.get(host.getId()));
+            if (result.isCanDo()) {
+                migrate(result.getVmsToHosts());
+
+                act.updateQtable(state, action, result.getReward(), nextState);
             } else {
                 boolean canDo = false;
                 int iterateTimes = 0;
                 while (canDo && iterateTimes < STUDYTIMESWHENFILLED) {
-                    if (action == 1) {
-                        int nextState = act.getStateByCpuUtilizition(hostCpuMap.get(host.getId()));
-                        act.updateQtable(state, action, -10, nextState);
-                    }
-                    if (action == 2) {
-                        act.updateQtable(state, action, -10, 0);
-                    }
-                    Pair<Boolean, List<VmToHost>> pair1 = canDo(action, host, hostList, hostCpuMap, totalPower);
-                    if (pair1.getKey()) {
-                        migrate(action, pair1.getValue());
+
+                    ExpectedResult result1 = canDo(action, host, hostList, hostCpuMap, totalPower);
+                    nextState = act.getStateByCpuUtilizition(hostCpuMap.get(host.getId()));
+                    act.updateQtable(state, action, result1.getReward(), nextState);
+                    if (result1.isCanDo()) {
+                        migrate(result1.getVmsToHosts());
+                        act.updateQtable(state, action, result.getReward(), nextState);
                         break;
                     }
                 }
@@ -141,48 +141,42 @@ public class agent {
 
     }
 
-    public void migrate(int action, List<VmToHost> vmHostList) {
-        if (action == 1) {
-            VmToHost vmToHost = vmHostList.get(0);
+    public void migrate(List<VmToHost> vmHostList) {
+        for (VmToHost vmToHost : vmHostList) {
             envirnment.getDatacenter().requestVmMigration(vmToHost.getVm(), vmToHost.getHost());
-        }
-        if (action == 2) {
-            for (VmToHost vmToHost : vmHostList) {
-                envirnment.getDatacenter().requestVmMigration(vmToHost.getVm(), vmToHost.getHost());
-            }
-
         }
     }
 
 
-    private Pair<Boolean, List<VmToHost>> canDo(int action, Host host, List<Host> hostList, Map<Long, Double> hostMap, double totalPower) {
+    private ExpectedResult canDo(int action, Host host, List<Host> hostList, Map<Long, Double> hostMap, double totalPower) {
         if (action == 0) {
-            Pair<Boolean, List<VmToHost>> pair = canDoAction2(host, hostList, hostMap, totalPower);
-            if (pair.getKey()) {
-                return new Pair<>(false, new ArrayList<>());
+            ExpectedResult result = canDoAction2(host, hostList, hostMap, totalPower);
+            if (result.isCanDo()) {
+                return createResult(false, null, result.getReward());
             }
-            Pair<Boolean, List<VmToHost>> pair1 = canDoAction1(host, hostList, hostMap, totalPower);
-            if (pair1.getKey()) {
-                return new Pair<>(false, new ArrayList<>());
+            ExpectedResult result1 = canDoAction1(host, hostList, hostMap, totalPower);
+            if (result1.isCanDo()) {
+                return createResult(false, null, result1.getReward());
             }
-            return new Pair<>(true, new ArrayList<>());
+            return createResult(true, null, 0.0);
         }
         if (action == 1) {
-            Pair<Boolean, List<VmToHost>> pair = canDoAction2(host, hostList, hostMap, totalPower);
-            if (pair.getKey()) {
-                return new Pair<>(false, new ArrayList<>());
+            ExpectedResult result = canDoAction2(host, hostList, hostMap, totalPower);
+            if (result.isCanDo()) {
+                return createResult(false, null, result.getReward());
             }
             return canDoAction1(host, hostList, hostMap, totalPower);
         }
         if (action == 2) {
             return canDoAction2(host, hostList, hostMap, totalPower);
         }
-        return new Pair<>(false, new ArrayList<>());
+        return createResult(false, null, 0.0);
     }
 
-    private Pair<Boolean, List<VmToHost>> canDoAction1(Host host, List<Host> hostList, Map<Long, Double> hostMap, double totalPower) {
+    private ExpectedResult canDoAction1(Host host, List<Host> hostList, Map<Long, Double> hostMap, double totalPower) {
+        double totalPowerAfterMigrate = totalPower;
         for (Host host1 : hostList) {
-            double totalPowerAfterMigrate = totalPower;
+
             totalPowerAfterMigrate -= host.getPowerModel().getPower(host.getCpuPercentUtilization() - (VM_PES / HOST_PES));
             totalPowerAfterMigrate += host1.getPowerModel().getPower(host1.getCpuPercentUtilization() + (VM_PES / HOST_PES));
             if (totalPowerAfterMigrate < totalPower && host1.getCpuPercentUtilization() < (100 - (VM_PES / HOST_PES))) {
@@ -193,21 +187,21 @@ public class agent {
                 pairList.add(vmToHost);
                 hostMap.put(host.getId(), hostMap.get(host.getId()) - (VM_PES / HOST_PES));
                 hostMap.put(host1.getId(), hostMap.get(host1.getId()) + (VM_PES / HOST_PES));
-                return new Pair<Boolean, List<VmToHost>>(true, pairList);
+                return createResult(true, pairList, totalPower - totalPowerAfterMigrate);
             }
         }
 
-        return new Pair<>(false, new ArrayList<>());
+        return createResult(false, null, totalPower - totalPowerAfterMigrate);
     }
 
-    private Pair<Boolean, List<VmToHost>> canDoAction2(Host host, List<Host> hostList, Map<Long, Double> hostMap, double totalPower) {
+    private ExpectedResult canDoAction2(Host host, List<Host> hostList, Map<Long, Double> hostMap, double totalPower) {
         double utilization = host.getCpuPercentUtilization();
         double sumFreeUt = 0.0;
         for (Host host1 : hostList) {
             sumFreeUt += (100 - host1.getCpuPercentUtilization());
         }
         if (utilization > sumFreeUt) {
-            return new Pair<>(false, null);
+            return createResult(false, null, -10.0);
         }
 
         //Polling strategy or lowest usage fisrt allocation strategy
@@ -216,7 +210,7 @@ public class agent {
 
     }
 
-    private Pair<Boolean, List<VmToHost>> lowestUsageFirst(Host host, List<Host> hostList, Map<Long, Double> hostCpuMap, double totalPower) {
+    private ExpectedResult lowestUsageFirst(Host host, List<Host> hostList, Map<Long, Double> hostCpuMap, double totalPower) {
         hostCpuMap.remove(host.getId());
         //create min Heap
         PriorityQueue<HostAndCpuUtilization> minHeap = new PriorityQueue<>(hostCpuMap.entrySet().size(), new Comparator<HostAndCpuUtilization>() {
@@ -240,7 +234,7 @@ public class agent {
             HostAndCpuUtilization head = minHeap.peek();
 
             if (head == null || head.getCpuUtilization() >= 100) {
-                return new Pair<>(false, null);
+                return createResult(false, null, -10.0);
             }
 
             if (head.getCpuUtilization() + (VM_PES / HOST_PES) > 100) {
@@ -251,7 +245,7 @@ public class agent {
             totalPowerAfterMigrate += targetHost.getPowerModel().getPower(head.getCpuUtilization() + (VM_PES / HOST_PES));
 
             if (totalPowerAfterMigrate >= totalPower) {
-                return new Pair<>(false, null);
+                return createResult(false, null, totalPower - totalPowerAfterMigrate);
             }
             VmToHost vmToHost = new VmToHost();
             vmToHost.setVm(vm);
@@ -264,8 +258,7 @@ public class agent {
 
         // update HostMap
         updateHostMap(host, hostCpuMap, minHeap);
-
-        return new Pair<>(true, migList);
+        return createResult(true, migList, totalPower - totalPowerAfterMigrate);
     }
 
     private void updateHostMap(Host host, Map<Long, Double> hostMap, PriorityQueue<HostAndCpuUtilization> minHeap) {
@@ -301,7 +294,6 @@ public class agent {
         }
     }
 
-
     private void listenBroker() {
         for (Cloudlet cloudlet1 : envirnment.getBroker().getCloudletCreatedList()) {
             System.out.println(cloudlet1.getId() + "------------" + cloudlet1.getStatus());
@@ -314,13 +306,20 @@ public class agent {
         }
     }
 
-
     private void waitSomeMillis() {
         try {
             Thread.sleep(INTERVAL_INT);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+    }
+
+    private ExpectedResult createResult(boolean canDo, List<VmToHost> vmsToHosts, Double reward) {
+        ExpectedResult result = new ExpectedResult();
+        result.setCanDo(canDo);
+        result.setVmsToHosts(vmsToHosts);
+        result.setReward(reward);
+        return result;
     }
 
 }
