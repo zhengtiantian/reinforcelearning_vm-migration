@@ -17,11 +17,29 @@ import java.util.List;
 
 public class dataCenter {
 
+    /**
+     * total hosts
+     */
     private static final int HOSTS = 5;
+    /**
+     * total core of single host
+     */
     private static final int HOST_PES = 64;
+    /**
+     * total memory of single host
+     */
     private static final long RAM = 131072; //in Megabytes
+    /**
+     * total internet bandwidth of single host
+     */
     private static final long BW = 10240; //in Megabits/s
+    /**
+     * total storage of single host
+     */
     private static final long STORAGE = 10240000; //in Megabytes
+    /**
+     * schedul interval
+     */
     private static final int SCHEDULING_INTERVAL = 2;
     /**
      * Defines the power a Host uses, even if it's idle (in Watts).
@@ -33,14 +51,20 @@ public class dataCenter {
      */
     private static final int MAX_POWER = 1000;
 
-
-
+    /**
+     * getDatacenter
+     * @param simulation
+     * @return
+     */
     public Datacenter getDatacenter(CloudSim simulation){
         return createDatacenter(simulation);
     }
 
-
-
+    /**
+     * create data center
+     * @param simulation
+     * @return
+     */
     private Datacenter createDatacenter(CloudSim simulation) {
         final List<Host> hostList = new ArrayList<>(HOSTS);
         for (int i = 0; i < HOSTS; i++) {
@@ -54,6 +78,10 @@ public class dataCenter {
         return dc;
     }
 
+    /**
+     * create hosts
+     * @return
+     */
     private Host createHost() {
         final List<Pe> peList = new ArrayList<>(HOSTS);
         for (int i = 0; i < HOST_PES; i++) {

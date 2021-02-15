@@ -9,8 +9,6 @@ public class envirnment {
     private static CloudSim simulation = new CloudSim();
     private static dataCenter dataCenter = new dataCenter();
     private static dataCenterBroker dataCenterBroker = new dataCenterBroker();
-
-
     private static Datacenter datacenter;
     private static DatacenterBroker broker;
 
@@ -46,7 +44,6 @@ public class envirnment {
     //01/12/2020
     private void onClockTickListener(EventInfo evt) {
         broker.getVmCreatedList().forEach(vm ->
-
                 System.out.printf(
                         "\t\tTime %6.1f: Vm %d CPU Usage: %6.2f%% (%2d vCPUs. Running Cloudlets: #%d). HOST %d %n",
                         evt.getTime(), vm.getId(), vm.getCpuPercentUtilization() * 100.0, vm.getNumberOfPes(),

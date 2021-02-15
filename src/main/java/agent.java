@@ -1,4 +1,3 @@
-import javafx.util.Pair;
 import org.cloudbus.cloudsim.cloudlets.Cloudlet;
 import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.hosts.Host;
@@ -15,31 +14,70 @@ import java.util.concurrent.Executors;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+/**
+ * @author zhengxiangyu
+ */
 public class agent {
 
+    /**
+     * get the information from the environment
+     */
     private static ConcurrentLinkedQueue<EnvironmentInfo> queue = new ConcurrentLinkedQueue<>();
 
+    /**
+     * get the implement of environment
+     */
     private static envirnment envirnment = new envirnment();
 
+    /**
+     * get the simulation
+     */
     private static final CloudSim simulation = envirnment.getSimulation();
 
+    /**
+     * get the implement of actuator
+     */
     private static actuator act = new actuator();
 
+    /**
+     * get printer
+     */
     private static printer printer = new printer();
 
+    /**
+     *  Indicates the interval of historical power consumption of the host
+     */
     private static double INTERVAL = 3.0;
 
+    /**
+     * How long does it take to get information from the queue
+     */
     private static int INTERVAL_INT = 1000;
 
     private static Cloudlet cloudlet;
 
+    /**
+     * each host cores
+     */
     private static double HOST_PES = envirnment.getDataCenter().getHostPes();
 
+    /**
+     * each vm cores
+     */
     private static double VM_PES = envirnment.getDataCenterBroker().getVmPes();
 
+    /**
+     * The number of times the agent relearns after getting the action from the Q table and cannot execute
+     */
     private static int STUDYTIMESWHENFILLED = 3;
 
 
+    /**
+     * main function create two threads
+     * the first illustrate that strat the simulation - produce infomation of hosts and vms.
+     * the second one simulate the agent, witch get information of hosts and vms from queue.
+     * @param args
+     */
     public static void main(String[] args) {
 
         ExecutorService ex = Executors.newFixedThreadPool(2);
@@ -68,6 +106,10 @@ public class agent {
 
     }
 
+
+    /**
+     * start simulation and get the information from the environment each second then put the information into the queue.
+     */
     public void startSimulation() {
         envirnment.start();
         iniQtable();
@@ -82,14 +124,15 @@ public class agent {
 
     }
 
+    /**
+     *  get the information from the queue then sent the assigment of create vms and vm migration to the environment
+     */
     public void getInfo() {
         for (int i = 0; i < 10000; i++) {
-
             if (!queue.isEmpty()) {
                 EnvironmentInfo info = queue.poll();
                 //print the cpu and ram usage of HOST and the cpu usage of VM
                 printer.print(info, simulation);
-                //TODO 1. Use algorithms to migrate VMs in some HOSTs with high CPU usage to HOSTs with low CPU usage
                 //22/01/2021
                 listenBroker();
                 //25/01/2021
@@ -100,29 +143,36 @@ public class agent {
         }
     }
 
+    /**
+     * 1.get the hosts information
+     * 2.calculate the total power consumption of the datacenter
+     * 3.iterate the hosts
+     *  3.1. get the state by host's cpu utilization
+     *  3.2. get the estimate action from q-table.
+     *  3.3. Determine whether can do the actions in the action array
+     *      3.3.1 if can do then migrate all the vms
+     *      3.3.2 update the q-table
+     *      3.3.3 if can not do relearn the action.the upper limit is 3 times
+     *      3.3.4 update the q-table
+     *  3.4. recalculate the total power of the data center
+     * @param info
+     */
     private void migrateVms(EnvironmentInfo info) {
         List<Host> hostList = info.getDatacenter().getHostList();
         Map<Long, Double> hostCpuMap = hostList.stream().collect(Collectors.toMap(Host::getId, Host::getCpuPercentUtilization));
-
         double totalPower = getTotalPower(hostList, hostCpuMap);
-
-
         for (Host host : hostList) {
             int state = act.getStateByCpuUtilizition(host.getCpuPercentUtilization());
-
             int action = act.getAction(state);
-
             ExpectedResult result = canDo(action, host, hostList, hostCpuMap, totalPower);
             int nextState = act.getStateByCpuUtilizition(hostCpuMap.get(host.getId()));
             if (result.isCanDo()) {
                 migrate(result.getVmsToHosts());
-
                 act.updateQtable(state, action, result.getReward(), nextState);
             } else {
                 boolean canDo = false;
                 int iterateTimes = 0;
                 while (canDo && iterateTimes < STUDYTIMESWHENFILLED) {
-
                     ExpectedResult result1 = canDo(action, host, hostList, hostCpuMap, totalPower);
                     nextState = act.getStateByCpuUtilizition(hostCpuMap.get(host.getId()));
                     act.updateQtable(state, action, result1.getReward(), nextState);
@@ -134,13 +184,16 @@ public class agent {
                 }
 
             }
-
             totalPower = getTotalPower(hostList, hostCpuMap);
         }
 
 
     }
 
+    /**
+     * sent the assignment of vm migration to the environment
+     * @param vmHostList
+     */
     public void migrate(List<VmToHost> vmHostList) {
         for (VmToHost vmToHost : vmHostList) {
             envirnment.getDatacenter().requestVmMigration(vmToHost.getVm(), vmToHost.getHost());
@@ -148,6 +201,15 @@ public class agent {
     }
 
 
+    /**
+     * Determine whether the given action from the Q table is the best action
+     * @param action
+     * @param host
+     * @param hostList
+     * @param hostMap
+     * @param totalPower
+     * @return ExpectedResult
+     */
     private ExpectedResult canDo(int action, Host host, List<Host> hostList, Map<Long, Double> hostMap, double totalPower) {
         if (action == 0) {
             ExpectedResult result = canDoAction2(host, hostList, hostMap, totalPower);
@@ -173,6 +235,14 @@ public class agent {
         return createResult(false, null, 0.0);
     }
 
+    /**
+     * Determine whether can do action1(migrate one vm to other host)
+     * @param host
+     * @param hostList
+     * @param hostMap
+     * @param totalPower
+     * @return ExpectedResult
+     */
     private ExpectedResult canDoAction1(Host host, List<Host> hostList, Map<Long, Double> hostMap, double totalPower) {
         double totalPowerAfterMigrate = totalPower;
         for (Host host1 : hostList) {
@@ -194,6 +264,14 @@ public class agent {
         return createResult(false, null, totalPower - totalPowerAfterMigrate);
     }
 
+    /**
+     * Determine whether can do action1(migrate all of the vms from the host to other hosts)
+     * @param host
+     * @param hostList
+     * @param hostMap
+     * @param totalPower
+     * @return ExpectedResult
+     */
     private ExpectedResult canDoAction2(Host host, List<Host> hostList, Map<Long, Double> hostMap, double totalPower) {
         double utilization = host.getCpuPercentUtilization();
         double sumFreeUt = 0.0;
@@ -210,6 +288,14 @@ public class agent {
 
     }
 
+    /**
+     * Strategy for allocating virtual machines, which user PriorityQueue pull the host with lowest power consumption first
+     * @param host
+     * @param hostList
+     * @param hostCpuMap
+     * @param totalPower
+     * @return
+     */
     private ExpectedResult lowestUsageFirst(Host host, List<Host> hostList, Map<Long, Double> hostCpuMap, double totalPower) {
         hostCpuMap.remove(host.getId());
         //create min Heap
@@ -261,6 +347,12 @@ public class agent {
         return createResult(true, migList, totalPower - totalPowerAfterMigrate);
     }
 
+    /**
+     * recalculate the cpu utilization map
+     * @param host
+     * @param hostMap
+     * @param minHeap
+     */
     private void updateHostMap(Host host, Map<Long, Double> hostMap, PriorityQueue<HostAndCpuUtilization> minHeap) {
         hostMap = new HashMap<>();
         hostMap.put(host.getId(), 0.0);
@@ -270,7 +362,12 @@ public class agent {
 
     }
 
-
+    /**
+     * calculate the total power of the data center according to the cpu utilization map and hostlist.
+     * @param hostList
+     * @param hostMap
+     * @return
+     */
     private double getTotalPower(List<Host> hostList, Map<Long, Double> hostMap) {
         double totalPower = 0.0;
         for (Host host : hostList) {
@@ -280,6 +377,9 @@ public class agent {
     }
 
 
+    /**
+     * inicial q-table
+     */
     private void iniQtable() {
         act.initQtalbe();
         int[] actions = act.getAction();
@@ -294,6 +394,9 @@ public class agent {
         }
     }
 
+    /**
+     * monite the last cloudlet in current cloudlet list, when the cloudlet finished then create more cloudlets and vms.
+     */
     private void listenBroker() {
         for (Cloudlet cloudlet1 : envirnment.getBroker().getCloudletCreatedList()) {
             System.out.println(cloudlet1.getId() + "------------" + cloudlet1.getStatus());
@@ -314,6 +417,13 @@ public class agent {
         }
     }
 
+    /**
+     * Assembly parameters
+     * @param canDo
+     * @param vmsToHosts
+     * @param reward
+     * @return
+     */
     private ExpectedResult createResult(boolean canDo, List<VmToHost> vmsToHosts, Double reward) {
         ExpectedResult result = new ExpectedResult();
         result.setCanDo(canDo);
