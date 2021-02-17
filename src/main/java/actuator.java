@@ -158,7 +158,7 @@ public class actuator {
      * @return
      */
     public int getReward(int state, int action, int nextState) {
-        if (action == 2) {
+        if (action != 0) {
             return state * 10;
         } else if (action == 1 && state > nextState) {
             return (state - nextState) * 10;

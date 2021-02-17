@@ -1,7 +1,9 @@
+import ch.qos.logback.classic.Level;
 import org.cloudbus.cloudsim.cloudlets.Cloudlet;
 import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.hosts.Host;
 import org.cloudbus.cloudsim.vms.Vm;
+import org.cloudsimplus.util.Log;
 import po.EnvironmentInfo;
 import po.ExpectedResult;
 import po.HostAndCpuUtilization;
@@ -45,7 +47,7 @@ public class agent {
     private static printer printer = new printer();
 
     /**
-     *  Indicates the interval of historical power consumption of the host
+     * Indicates the interval of historical power consumption of the host
      */
     private static double INTERVAL = 3.0;
 
@@ -76,10 +78,11 @@ public class agent {
      * main function create two threads
      * the first illustrate that strat the simulation - produce infomation of hosts and vms.
      * the second one simulate the agent, witch get information of hosts and vms from queue.
+     *
      * @param args
      */
     public static void main(String[] args) {
-
+        Log.setLevel(Level.DEBUG);
         ExecutorService ex = Executors.newFixedThreadPool(2);
 
         agent agent = new agent();
@@ -113,19 +116,20 @@ public class agent {
     public void startSimulation() {
         envirnment.start();
         iniQtable();
+        waitSomeMillis(30 * 1000);
         for (int i = 0; i < 10000; i++) {
             EnvironmentInfo info = new EnvironmentInfo();
             info.setDatacenter(envirnment.getDatacenter());
             info.setBroker(envirnment.getBroker());
             queue.offer(info);
             simulation.runFor(INTERVAL);
-            waitSomeMillis();
+            waitSomeMillis(1000);
         }
 
     }
 
     /**
-     *  get the information from the queue then sent the assigment of create vms and vm migration to the environment
+     * get the information from the queue then sent the assigment of create vms and vm migration to the environment
      */
     public void getInfo() {
         for (int i = 0; i < 10000; i++) {
@@ -139,7 +143,7 @@ public class agent {
                 migrateVms(info);
             }
 
-            waitSomeMillis();
+            waitSomeMillis(1000);
         }
     }
 
@@ -147,14 +151,15 @@ public class agent {
      * 1.get the hosts information
      * 2.calculate the total power consumption of the datacenter
      * 3.iterate the hosts
-     *  3.1. get the state by host's cpu utilization
-     *  3.2. get the estimate action from q-table.
-     *  3.3. Determine whether can do the actions in the action array
-     *      3.3.1 if can do then migrate all the vms
-     *      3.3.2 update the q-table
-     *      3.3.3 if can not do relearn the action.the upper limit is 3 times
-     *      3.3.4 update the q-table
-     *  3.4. recalculate the total power of the data center
+     * 3.1. get the state by host's cpu utilization
+     * 3.2. get the estimate action from q-table.
+     * 3.3. Determine whether can do the actions in the action array
+     * 3.3.1 if can do then migrate all the vms
+     * 3.3.2 update the q-table
+     * 3.3.3 if can not do relearn the action.the upper limit is 3 times
+     * 3.3.4 update the q-table
+     * 3.4. recalculate the total power of the data center
+     *
      * @param info
      */
     private void migrateVms(EnvironmentInfo info) {
@@ -170,9 +175,10 @@ public class agent {
                 migrate(result.getVmsToHosts());
                 act.updateQtable(state, action, result.getReward(), nextState);
             } else {
-                boolean canDo = false;
                 int iterateTimes = 0;
-                while (canDo && iterateTimes < STUDYTIMESWHENFILLED) {
+                act.updateQtable(state, action, result.getReward(), nextState);
+                while (iterateTimes < STUDYTIMESWHENFILLED) {
+                    action = act.getAction(state);
                     ExpectedResult result1 = canDo(action, host, hostList, hostCpuMap, totalPower);
                     nextState = act.getStateByCpuUtilizition(hostCpuMap.get(host.getId()));
                     act.updateQtable(state, action, result1.getReward(), nextState);
@@ -192,6 +198,7 @@ public class agent {
 
     /**
      * sent the assignment of vm migration to the environment
+     *
      * @param vmHostList
      */
     public void migrate(List<VmToHost> vmHostList) {
@@ -203,6 +210,7 @@ public class agent {
 
     /**
      * Determine whether the given action from the Q table is the best action
+     *
      * @param action
      * @param host
      * @param hostList
@@ -214,18 +222,18 @@ public class agent {
         if (action == 0) {
             ExpectedResult result = canDoAction2(host, hostList, hostMap, totalPower);
             if (result.isCanDo()) {
-                return createResult(false, null, result.getReward());
+                return createResult(false, null, -result.getReward());
             }
             ExpectedResult result1 = canDoAction1(host, hostList, hostMap, totalPower);
             if (result1.isCanDo()) {
-                return createResult(false, null, result1.getReward());
+                return createResult(false, null, -result1.getReward());
             }
             return createResult(true, null, 0.0);
         }
         if (action == 1) {
             ExpectedResult result = canDoAction2(host, hostList, hostMap, totalPower);
             if (result.isCanDo()) {
-                return createResult(false, null, result.getReward());
+                return createResult(false, null, -result.getReward());
             }
             return canDoAction1(host, hostList, hostMap, totalPower);
         }
@@ -237,6 +245,7 @@ public class agent {
 
     /**
      * Determine whether can do action1(migrate one vm to other host)
+     *
      * @param host
      * @param hostList
      * @param hostMap
@@ -266,6 +275,7 @@ public class agent {
 
     /**
      * Determine whether can do action1(migrate all of the vms from the host to other hosts)
+     *
      * @param host
      * @param hostList
      * @param hostMap
@@ -290,6 +300,7 @@ public class agent {
 
     /**
      * Strategy for allocating virtual machines, which user PriorityQueue pull the host with lowest power consumption first
+     *
      * @param host
      * @param hostList
      * @param hostCpuMap
@@ -349,12 +360,12 @@ public class agent {
 
     /**
      * recalculate the cpu utilization map
+     *
      * @param host
      * @param hostMap
      * @param minHeap
      */
     private void updateHostMap(Host host, Map<Long, Double> hostMap, PriorityQueue<HostAndCpuUtilization> minHeap) {
-        hostMap = new HashMap<>();
         hostMap.put(host.getId(), 0.0);
         for (HostAndCpuUtilization hostAndCpuUtilization : minHeap) {
             hostMap.put(hostAndCpuUtilization.getHostId(), hostAndCpuUtilization.getCpuUtilization());
@@ -364,6 +375,7 @@ public class agent {
 
     /**
      * calculate the total power of the data center according to the cpu utilization map and hostlist.
+     *
      * @param hostList
      * @param hostMap
      * @return
@@ -409,9 +421,9 @@ public class agent {
         }
     }
 
-    private void waitSomeMillis() {
+    private void waitSomeMillis(long time) {
         try {
-            Thread.sleep(INTERVAL_INT);
+            Thread.sleep(time);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -419,6 +431,7 @@ public class agent {
 
     /**
      * Assembly parameters
+     *
      * @param canDo
      * @param vmsToHosts
      * @param reward
