@@ -1,17 +1,19 @@
 import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.core.Simulation;
 import org.cloudbus.cloudsim.hosts.Host;
+import org.cloudbus.cloudsim.vms.Vm;
 import po.EnvironmentInfo;
 import util.Conversion;
 
 import java.util.DoubleSummaryStatistics;
+import java.util.List;
 import java.util.Map;
 
 public class printer {
 
     public void print(EnvironmentInfo info, CloudSim simulation) {
-
-        info.getBroker().getVmCreatedList().forEach(vm ->
+        List<Vm> list = info.getBroker().getVmCreatedList();
+        list.forEach(vm ->
 
                 System.out.printf(
                         "\t\tVm %d CPU Usage: %6.2f%% (%2d vCPUs. Running Cloudlets: #%d). HOST %d %n",
@@ -21,6 +23,7 @@ public class printer {
         );
 
         for (Host host : info.getDatacenter().getHostList()) {
+//            System.out.println(host.getFirstStartTime());
             printHostCpuUtilizationAndPowerConsumption(simulation,host);
         }
 

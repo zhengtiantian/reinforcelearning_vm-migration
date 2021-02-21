@@ -1,10 +1,11 @@
 import org.cloudbus.cloudsim.allocationpolicies.VmAllocationPolicyFirstFit;
-import org.cloudbus.cloudsim.allocationpolicies.VmAllocationPolicySimple;
 import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.datacenters.Datacenter;
 import org.cloudbus.cloudsim.datacenters.DatacenterSimple;
 import org.cloudbus.cloudsim.hosts.Host;
 import org.cloudbus.cloudsim.hosts.HostSimple;
+import org.cloudbus.cloudsim.power.models.PowerModelDatacenter;
+import org.cloudbus.cloudsim.power.models.PowerModelDatacenterSimple;
 import org.cloudbus.cloudsim.power.models.PowerModelHostSimple;
 import org.cloudbus.cloudsim.provisioners.PeProvisionerSimple;
 import org.cloudbus.cloudsim.provisioners.ResourceProvisionerSimple;
@@ -73,7 +74,9 @@ public class dataCenter {
         }
 
         //Uses a VmAllocationPolicySimple by default to allocate VMs
+
         DatacenterSimple dc = new DatacenterSimple(simulation, hostList, new VmAllocationPolicyFirstFit());
+
         dc.setSchedulingInterval(SCHEDULING_INTERVAL);
         return dc;
     }

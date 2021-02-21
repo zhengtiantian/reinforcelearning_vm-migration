@@ -36,7 +36,7 @@ public class actuator {
     /**
      * Learning rate
      */
-    static double learningRate = 0.01;
+    static double learningRate = 0.1;
 
     /**
      * Determine the value of reward to the future
@@ -56,7 +56,7 @@ public class actuator {
     }
 
     public void updateQtable(int state, int action, double reward, int nextState) {
-        qtable[state][action] += learningRate * (reward + discountFactor * max(qtable[nextState]) - qtable[state][action]);
+        qtable[state][action] = (1 - learningRate) * qtable[state][action] + learningRate * (reward + discountFactor * max(qtable[nextState]) - qtable[state][action]);
     }
 
 
@@ -77,7 +77,8 @@ public class actuator {
      * @return best action
      */
     public int getAction(int state) {
-        if (Math.random() < exploration) {
+        double random = Math.random();
+        if (random < exploration) {
             return action[new Random().nextInt(action.length)];
         } else {
             return getValuebleAct(qtable[state]);
@@ -90,7 +91,7 @@ public class actuator {
      */
     private int getValuebleAct(double[] doubles) {
         int act = 0;
-        double max = Double.MIN_VALUE;
+        double max = -200000000000.0;
         for (int i = 0; i < doubles.length; i++) {
             if (doubles[i] > max) {
                 max = doubles[i];
@@ -133,7 +134,6 @@ public class actuator {
     }
 
     /**
-     *
      * @return action array
      */
     public static int[] getAction() {
@@ -141,7 +141,6 @@ public class actuator {
     }
 
     /**
-     *
      * @return state array
      */
     public static int[] getState() {

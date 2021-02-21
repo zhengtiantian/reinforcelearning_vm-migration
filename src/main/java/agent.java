@@ -54,7 +54,7 @@ public class agent {
     /**
      * How long does it take to get information from the queue
      */
-    private static int INTERVAL_INT = 1000;
+    private static int INTERVAL_INT = 3000;
 
     private static Cloudlet cloudlet;
 
@@ -95,7 +95,7 @@ public class agent {
                     agent.startSimulation();
                 }
             });
-
+            waitSomeMillis(60 * 1000);
             // create a thread to get cpu and ram from HOST and VM
             ex.submit(new Runnable() {
                 @Override
@@ -116,35 +116,44 @@ public class agent {
     public void startSimulation() {
         envirnment.start();
         iniQtable();
-        waitSomeMillis(30 * 1000);
-        for (int i = 0; i < 10000; i++) {
+        waitSomeMillis(60 * 1000);
+        while (simulation.isRunning()) {
             EnvironmentInfo info = new EnvironmentInfo();
             info.setDatacenter(envirnment.getDatacenter());
             info.setBroker(envirnment.getBroker());
             queue.offer(info);
             simulation.runFor(INTERVAL);
-            waitSomeMillis(1000);
+            waitSomeMillis(3000);
         }
-
     }
 
     /**
      * get the information from the queue then sent the assigment of create vms and vm migration to the environment
      */
     public void getInfo() {
-        for (int i = 0; i < 10000; i++) {
+
+        for (int i = 0; i < 100000; i++) {
             if (!queue.isEmpty()) {
                 EnvironmentInfo info = queue.poll();
-                //print the cpu and ram usage of HOST and the cpu usage of VM
-                printer.print(info, simulation);
-                //22/01/2021
-                listenBroker();
-                //25/01/2021
-                migrateVms(info);
-            }
+                try {
+                    //print the cpu and ram usage of HOST and the cpu usage of VM
+                    printer.print(info, simulation);
+                    //22/01/2021
+                    listenBroker();
+                    //25/01/2021
+                    migrateVms(info);
+                } catch (Exception e) {
+                    System.out.println("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++" +
+                            "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+                    e.printStackTrace();
+                }
 
+            }
             waitSomeMillis(1000);
         }
+//        while (simulation.isRunning()) {
+//
+//        }
     }
 
     /**
@@ -172,7 +181,7 @@ public class agent {
             ExpectedResult result = canDo(action, host, hostList, hostCpuMap, totalPower);
             int nextState = act.getStateByCpuUtilizition(hostCpuMap.get(host.getId()));
             if (result.isCanDo()) {
-                migrate(result.getVmsToHosts());
+                migrate(action, host, result.getVmsToHosts());
                 act.updateQtable(state, action, result.getReward(), nextState);
             } else {
                 int iterateTimes = 0;
@@ -183,10 +192,10 @@ public class agent {
                     nextState = act.getStateByCpuUtilizition(hostCpuMap.get(host.getId()));
                     act.updateQtable(state, action, result1.getReward(), nextState);
                     if (result1.isCanDo()) {
-                        migrate(result1.getVmsToHosts());
-                        act.updateQtable(state, action, result.getReward(), nextState);
+                        migrate(action, host, result1.getVmsToHosts());
                         break;
                     }
+                    iterateTimes++;
                 }
 
             }
@@ -199,11 +208,16 @@ public class agent {
     /**
      * sent the assignment of vm migration to the environment
      *
+     * @param action
+     * @param host
      * @param vmHostList
      */
-    public void migrate(List<VmToHost> vmHostList) {
+    public void migrate(int action, Host host, List<VmToHost> vmHostList) {
         for (VmToHost vmToHost : vmHostList) {
             envirnment.getDatacenter().requestVmMigration(vmToHost.getVm(), vmToHost.getHost());
+        }
+        if(action == 2){
+            host.setActive(false);
         }
     }
 
@@ -310,18 +324,7 @@ public class agent {
     private ExpectedResult lowestUsageFirst(Host host, List<Host> hostList, Map<Long, Double> hostCpuMap, double totalPower) {
         hostCpuMap.remove(host.getId());
         //create min Heap
-        PriorityQueue<HostAndCpuUtilization> minHeap = new PriorityQueue<>(hostCpuMap.entrySet().size(), new Comparator<HostAndCpuUtilization>() {
-            @Override
-            public int compare(HostAndCpuUtilization o1, HostAndCpuUtilization o2) {
-                if (o1.getCpuUtilization() > o2.getCpuUtilization()) {
-                    return 1;
-                } else if (o1.getCpuUtilization() == o2.getCpuUtilization()) {
-                    return 0;
-                } else {
-                    return -1;
-                }
-            }
-        });
+        PriorityQueue<HostAndCpuUtilization> minHeap = createPriorityQueue(hostCpuMap);
         Map<Long, Host> hostMap = hostList.stream().collect(Collectors.toMap(Host::getId, Function.identity()));
         List<VmToHost> migList = new ArrayList<>();
         double totalPowerAfterMigrate = totalPower;
@@ -331,10 +334,12 @@ public class agent {
             HostAndCpuUtilization head = minHeap.peek();
 
             if (head == null || head.getCpuUtilization() >= 100) {
+                updateHostMap(host, hostCpuMap, minHeap);
                 return createResult(false, null, -10.0);
             }
 
             if (head.getCpuUtilization() + (VM_PES / HOST_PES) > 100) {
+                updateHostMap(host, hostCpuMap, minHeap);
                 continue;
             }
             Host targetHost = hostMap.get(head.getHostId());
@@ -342,6 +347,7 @@ public class agent {
             totalPowerAfterMigrate += targetHost.getPowerModel().getPower(head.getCpuUtilization() + (VM_PES / HOST_PES));
 
             if (totalPowerAfterMigrate >= totalPower) {
+                updateHostMap(host, hostCpuMap, minHeap);
                 return createResult(false, null, totalPower - totalPowerAfterMigrate);
             }
             VmToHost vmToHost = new VmToHost();
@@ -356,6 +362,28 @@ public class agent {
         // update HostMap
         updateHostMap(host, hostCpuMap, minHeap);
         return createResult(true, migList, totalPower - totalPowerAfterMigrate);
+    }
+
+    private PriorityQueue<HostAndCpuUtilization> createPriorityQueue(Map<Long, Double> hostCpuMap) {
+        PriorityQueue<HostAndCpuUtilization> minHeap = new PriorityQueue<>(hostCpuMap.entrySet().size(), new Comparator<HostAndCpuUtilization>() {
+            @Override
+            public int compare(HostAndCpuUtilization o1, HostAndCpuUtilization o2) {
+                if (o1.getCpuUtilization() > o2.getCpuUtilization()) {
+                    return 1;
+                } else if (o1.getCpuUtilization() == o2.getCpuUtilization()) {
+                    return 0;
+                } else {
+                    return -1;
+                }
+            }
+        });
+        for (Map.Entry<Long, Double> entry : hostCpuMap.entrySet()) {
+            HostAndCpuUtilization h = new HostAndCpuUtilization();
+            h.setHostId(entry.getKey());
+            h.setCpuUtilization(entry.getValue());
+            minHeap.add(h);
+        }
+        return minHeap;
     }
 
     /**
@@ -421,7 +449,7 @@ public class agent {
         }
     }
 
-    private void waitSomeMillis(long time) {
+    private static void waitSomeMillis(long time) {
         try {
             Thread.sleep(time);
         } catch (InterruptedException e) {
