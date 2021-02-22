@@ -1,7 +1,12 @@
+import org.cloudbus.cloudsim.allocationpolicies.VmAllocationPolicy;
 import org.cloudbus.cloudsim.allocationpolicies.VmAllocationPolicyFirstFit;
+import org.cloudbus.cloudsim.allocationpolicies.VmAllocationPolicyRandom;
+import org.cloudbus.cloudsim.allocationpolicies.VmAllocationPolicySimple;
 import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.datacenters.Datacenter;
 import org.cloudbus.cloudsim.datacenters.DatacenterSimple;
+import org.cloudbus.cloudsim.distributions.ContinuousDistribution;
+import org.cloudbus.cloudsim.distributions.UniformDistr;
 import org.cloudbus.cloudsim.hosts.Host;
 import org.cloudbus.cloudsim.hosts.HostSimple;
 import org.cloudbus.cloudsim.power.models.PowerModelDatacenter;
@@ -12,16 +17,18 @@ import org.cloudbus.cloudsim.provisioners.ResourceProvisionerSimple;
 import org.cloudbus.cloudsim.resources.Pe;
 import org.cloudbus.cloudsim.resources.PeSimple;
 import org.cloudbus.cloudsim.schedulers.vm.VmSchedulerTimeShared;
+import org.cloudbus.cloudsim.vms.Vm;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class dataCenter {
 
     /**
      * total hosts
      */
-    private static final int HOSTS = 5;
+    private static final int HOSTS = 2;
     /**
      * total core of single host
      */
@@ -52,6 +59,11 @@ public class dataCenter {
      */
     private static final int MAX_POWER = 1000;
 
+    private static ContinuousDistribution random = new UniformDistr();
+
+    public dataCenter() {
+    }
+
     /**
      * getDatacenter
      * @param simulation
@@ -72,10 +84,9 @@ public class dataCenter {
             Host host = createHost();
             hostList.add(host);
         }
-
-        //Uses a VmAllocationPolicySimple by default to allocate VMs
-
-        DatacenterSimple dc = new DatacenterSimple(simulation, hostList, new VmAllocationPolicyFirstFit());
+        VmAllocationPolicySimple vmAllocationPolicy = new VmAllocationPolicySimple();
+//        vmAllocationPolicy.setFindHostForVmFunction(this::findRandomSuitableHostForVm);
+        DatacenterSimple dc = new DatacenterSimple(simulation, hostList, vmAllocationPolicy);
 
         dc.setSchedulingInterval(SCHEDULING_INTERVAL);
         return dc;
@@ -100,11 +111,29 @@ public class dataCenter {
         host.setRamProvisioner(new ResourceProvisionerSimple());
         host.setBwProvisioner(new ResourceProvisionerSimple());
         host.setVmScheduler(new VmSchedulerTimeShared());
+        host.setIdleShutdownDeadline(1.0);
         return host;
     }
 
     public int getHostPes(){
         return HOST_PES;
+    }
+
+    private Optional<Host> findRandomSuitableHostForVm(final VmAllocationPolicy vmAllocationPolicy, final Vm vm) {
+        final List<Host> hostList = vmAllocationPolicy.getHostList();
+        /* Despite the loop is bound to the number of Hosts inside the List,
+         *  the index "i" is not used to get a Host at that position,
+         *  but just to define that the maximum number of tries to find a
+         *  suitable Host will be the number of available Hosts.*/
+        for (int i = 0; i < hostList.size(); i++){
+            final int randomIndex = (int)(random.sample() * hostList.size());
+            final Host host = hostList.get(randomIndex);
+            if(host.isSuitableForVm(vm)){
+                return Optional.of(host);
+            }
+        }
+
+        return Optional.empty();
     }
 
 }

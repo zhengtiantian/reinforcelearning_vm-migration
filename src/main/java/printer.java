@@ -67,4 +67,12 @@ public class printer {
                 "Mean %.2f Ws for %d usage samples (%.5f kWh)%n",
                 powerWattsSecMean, utilizationPercentHistory.size(), Conversion.wattSecondsToKWattHours(powerWattsSecMean));
     }
+
+    private double getPower(Host host, double cpuUtilization) {
+        if (cpuUtilization <= 0) {
+            return 0.0;
+        } else {
+            return host.getPowerModel().getPower(cpuUtilization);
+        }
+    }
 }

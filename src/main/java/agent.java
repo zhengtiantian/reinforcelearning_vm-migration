@@ -149,7 +149,7 @@ public class agent {
                 }
 
             }
-            waitSomeMillis(1000);
+            waitSomeMillis(3000);
         }
 //        while (simulation.isRunning()) {
 //
@@ -213,11 +213,13 @@ public class agent {
      * @param vmHostList
      */
     public void migrate(int action, Host host, List<VmToHost> vmHostList) {
-        for (VmToHost vmToHost : vmHostList) {
-            envirnment.getDatacenter().requestVmMigration(vmToHost.getVm(), vmToHost.getHost());
-        }
-        if(action == 2){
-            host.setActive(false);
+        if (vmHostList != null && vmHostList.size() > 0) {
+            for (VmToHost vmToHost : vmHostList) {
+                envirnment.getDatacenter().requestVmMigration(vmToHost.getVm(), vmToHost.getHost());
+            }
+            if (action == 2) {
+                host.setActive(false);
+            }
         }
     }
 
@@ -270,8 +272,8 @@ public class agent {
         double totalPowerAfterMigrate = totalPower;
         for (Host host1 : hostList) {
 
-            totalPowerAfterMigrate -= host.getPowerModel().getPower(host.getCpuPercentUtilization() - (VM_PES / HOST_PES));
-            totalPowerAfterMigrate += host1.getPowerModel().getPower(host1.getCpuPercentUtilization() + (VM_PES / HOST_PES));
+            totalPowerAfterMigrate -= getPower(host, host.getCpuPercentUtilization() - (VM_PES / HOST_PES));
+            totalPowerAfterMigrate += getPower(host1, host1.getCpuPercentUtilization() + (VM_PES / HOST_PES));
             if (totalPowerAfterMigrate < totalPower && host1.getCpuPercentUtilization() < (100 - (VM_PES / HOST_PES))) {
                 List<VmToHost> pairList = new ArrayList<>();
                 VmToHost vmToHost = new VmToHost();
@@ -328,7 +330,7 @@ public class agent {
         Map<Long, Host> hostMap = hostList.stream().collect(Collectors.toMap(Host::getId, Function.identity()));
         List<VmToHost> migList = new ArrayList<>();
         double totalPowerAfterMigrate = totalPower;
-        totalPowerAfterMigrate -= host.getPowerModel().getPower(host.getCpuPercentUtilization());
+        totalPowerAfterMigrate -= getPower(host, host.getCpuPercentUtilization());
         for (Vm vm : host.getVmList()) {
 
             HostAndCpuUtilization head = minHeap.peek();
@@ -343,8 +345,8 @@ public class agent {
                 continue;
             }
             Host targetHost = hostMap.get(head.getHostId());
-            totalPowerAfterMigrate -= targetHost.getPowerModel().getPower(head.getCpuUtilization());
-            totalPowerAfterMigrate += targetHost.getPowerModel().getPower(head.getCpuUtilization() + (VM_PES / HOST_PES));
+            totalPowerAfterMigrate -= getPower(targetHost, head.getCpuUtilization());
+            totalPowerAfterMigrate += getPower(targetHost, head.getCpuUtilization() + (VM_PES / HOST_PES));
 
             if (totalPowerAfterMigrate >= totalPower) {
                 updateHostMap(host, hostCpuMap, minHeap);
@@ -355,7 +357,7 @@ public class agent {
             vmToHost.setHost(targetHost);
             migList.add(vmToHost);
             minHeap.poll();
-            head.setCpuUtilization(head.getCpuUtilization() + head.getCpuUtilization() + (VM_PES / HOST_PES));
+            head.setCpuUtilization(head.getCpuUtilization() + (VM_PES / HOST_PES));
             minHeap.add(head);
         }
 
@@ -411,7 +413,7 @@ public class agent {
     private double getTotalPower(List<Host> hostList, Map<Long, Double> hostMap) {
         double totalPower = 0.0;
         for (Host host : hostList) {
-            totalPower += host.getPowerModel().getPower(hostMap.get(host.getId()));
+            totalPower += getPower(host, hostMap.get(host.getId()));
         }
         return totalPower;
     }
@@ -471,6 +473,14 @@ public class agent {
         result.setVmsToHosts(vmsToHosts);
         result.setReward(reward);
         return result;
+    }
+
+    private double getPower(Host host, double cpuUtilization) {
+        if (cpuUtilization <= 0) {
+            return 0.0;
+        } else {
+            return host.getPowerModel().getPower(cpuUtilization);
+        }
     }
 
 }
