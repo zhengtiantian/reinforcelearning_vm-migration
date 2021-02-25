@@ -12,6 +12,7 @@ import org.cloudbus.cloudsim.hosts.HostSimple;
 import org.cloudbus.cloudsim.power.models.PowerModelDatacenter;
 import org.cloudbus.cloudsim.power.models.PowerModelDatacenterSimple;
 import org.cloudbus.cloudsim.power.models.PowerModelHostSimple;
+import org.cloudbus.cloudsim.power.models.PowerModelHostSpec;
 import org.cloudbus.cloudsim.provisioners.PeProvisionerSimple;
 import org.cloudbus.cloudsim.provisioners.ResourceProvisionerSimple;
 import org.cloudbus.cloudsim.resources.Pe;
@@ -66,15 +67,17 @@ public class dataCenter {
 
     /**
      * getDatacenter
+     *
      * @param simulation
      * @return
      */
-    public Datacenter getDatacenter(CloudSim simulation){
+    public Datacenter getDatacenter(CloudSim simulation) {
         return createDatacenter(simulation);
     }
 
     /**
      * create data center
+     *
      * @param simulation
      * @return
      */
@@ -94,6 +97,7 @@ public class dataCenter {
 
     /**
      * create hosts
+     *
      * @return
      */
     private Host createHost() {
@@ -106,8 +110,9 @@ public class dataCenter {
         final long bw = BW; //in Megabits/s
         final long storage = STORAGE; //in Megabytes
 
-        final Host host = new HostSimple(ram, bw, storage, peList);
-        host.setPowerModel(new PowerModelHostSimple(MAX_POWER, STATIC_POWER));
+        final Host host = new HostSimple(ram, bw, storage, peList, false);
+        host.setPowerModel(new PowerModelHostSimple(MAX_POWER,STATIC_POWER));
+//        host.setPowerModel(new PowerModelHostSpec(getCPUlist()));
         host.setRamProvisioner(new ResourceProvisionerSimple());
         host.setBwProvisioner(new ResourceProvisionerSimple());
         host.setVmScheduler(new VmSchedulerTimeShared());
@@ -115,25 +120,28 @@ public class dataCenter {
         return host;
     }
 
-    public int getHostPes(){
+    public int getHostPes() {
         return HOST_PES;
     }
 
     private Optional<Host> findRandomSuitableHostForVm(final VmAllocationPolicy vmAllocationPolicy, final Vm vm) {
         final List<Host> hostList = vmAllocationPolicy.getHostList();
-        /* Despite the loop is bound to the number of Hosts inside the List,
-         *  the index "i" is not used to get a Host at that position,
-         *  but just to define that the maximum number of tries to find a
-         *  suitable Host will be the number of available Hosts.*/
-        for (int i = 0; i < hostList.size(); i++){
-            final int randomIndex = (int)(random.sample() * hostList.size());
+        for (int i = 0; i < hostList.size(); i++) {
+            final int randomIndex = (int) (random.sample() * hostList.size());
             final Host host = hostList.get(randomIndex);
-            if(host.isSuitableForVm(vm)){
+            if (host.isSuitableForVm(vm)) {
                 return Optional.of(host);
             }
         }
-
         return Optional.empty();
     }
+
+//    private List<Double> getCPUlist() {
+//        List result = new ArrayList();
+//        for (double i = 0.0; i <= 100.0; i++) {
+//            result.add(i);
+//        }
+//        return result;
+//    }
 
 }

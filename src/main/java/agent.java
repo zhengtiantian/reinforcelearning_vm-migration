@@ -104,6 +104,7 @@ public class agent {
                 }
             });
         } catch (Exception e) {
+            System.out.println(e);
             e.printStackTrace();
         }
 
@@ -114,17 +115,24 @@ public class agent {
      * start simulation and get the information from the environment each second then put the information into the queue.
      */
     public void startSimulation() {
-        envirnment.start();
-        iniQtable();
-        waitSomeMillis(60 * 1000);
-        while (simulation.isRunning()) {
-            EnvironmentInfo info = new EnvironmentInfo();
-            info.setDatacenter(envirnment.getDatacenter());
-            info.setBroker(envirnment.getBroker());
-            queue.offer(info);
-            simulation.runFor(INTERVAL);
-            waitSomeMillis(3000);
+        try {
+            envirnment.start();
+            iniQtable();
+            waitSomeMillis(60 * 1000);
+            while (simulation.isRunning()) {
+                EnvironmentInfo info = new EnvironmentInfo();
+                info.setDatacenter(envirnment.getDatacenter());
+                info.setBroker(envirnment.getBroker());
+                queue.offer(info);
+                simulation.runFor(INTERVAL);
+                waitSomeMillis(10 * 1000);
+            }
+        } catch (Exception e) {
+            System.out.println("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++" +
+                    "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+            e.printStackTrace();
         }
+
     }
 
     /**
@@ -149,7 +157,7 @@ public class agent {
                 }
 
             }
-            waitSomeMillis(3000);
+            waitSomeMillis(10 * 1000);
         }
 //        while (simulation.isRunning()) {
 //
@@ -173,9 +181,13 @@ public class agent {
      */
     private void migrateVms(EnvironmentInfo info) {
         List<Host> hostList = info.getDatacenter().getHostList();
+
         Map<Long, Double> hostCpuMap = hostList.stream().collect(Collectors.toMap(Host::getId, Host::getCpuPercentUtilization));
         double totalPower = getTotalPower(hostList, hostCpuMap);
         for (Host host : hostList) {
+            if (host.getVmList() == null || host.getVmList().size() == 0) {
+                continue;
+            }
             int state = act.getStateByCpuUtilizition(host.getCpuPercentUtilization());
             int action = act.getAction(state);
             ExpectedResult result = canDo(action, host, hostList, hostCpuMap, totalPower);
@@ -204,6 +216,7 @@ public class agent {
 
 
     }
+
 
     /**
      * sent the assignment of vm migration to the environment
@@ -476,10 +489,14 @@ public class agent {
     }
 
     private double getPower(Host host, double cpuUtilization) {
-        if (cpuUtilization <= 0) {
-            return 0.0;
-        } else {
+        if (host.isActive()) {
             return host.getPowerModel().getPower(cpuUtilization);
+        } else {
+            if (cpuUtilization > 0) {
+                return host.getPowerModel().getPower(cpuUtilization);
+            } else {
+                return 0.0;
+            }
         }
     }
 
