@@ -45,7 +45,7 @@ public class printer {
             utilizationHistoryTimeInterval = entry.getKey() - prevTime;
             //The total Host's CPU utilization for the time specified by the map key
             final double utilizationPercent = entry.getValue().getSum();
-            final double watts = host.getPowerModel().getPower(utilizationPercent);
+            final double watts = getPower(host,utilizationPercent);
             //Energy consumption in the time interval
             final double wattsSec = watts * utilizationHistoryTimeInterval;
             //Energy consumption in the entire simulation time
@@ -69,10 +69,14 @@ public class printer {
     }
 
     private double getPower(Host host, double cpuUtilization) {
-        if (cpuUtilization <= 0) {
-            return 0.0;
-        } else {
+        if (host.isActive()) {
             return host.getPowerModel().getPower(cpuUtilization);
+        } else {
+            if (cpuUtilization > 0) {
+                return host.getPowerModel().getPower(cpuUtilization);
+            } else {
+                return 0.0;
+            }
         }
     }
 }

@@ -277,26 +277,38 @@ public class agent {
      *
      * @param host
      * @param hostList
-     * @param hostMap
+     * @param hostCpuMap
      * @param totalPower
      * @return ExpectedResult
      */
-    private ExpectedResult canDoAction1(Host host, List<Host> hostList, Map<Long, Double> hostMap, double totalPower) {
+    private ExpectedResult canDoAction1(Host host, List<Host> hostList, Map<Long, Double> hostCpuMap, double totalPower) {
+        Map<Long, Host> hostMap = hostList.stream().collect(Collectors.toMap(Host::getId, Function.identity()));
         double totalPowerAfterMigrate = totalPower;
-        for (Host host1 : hostList) {
 
-            totalPowerAfterMigrate -= getPower(host, host.getCpuPercentUtilization() - (VM_PES / HOST_PES));
-            totalPowerAfterMigrate += getPower(host1, host1.getCpuPercentUtilization() + (VM_PES / HOST_PES));
-            if (totalPowerAfterMigrate < totalPower && host1.getCpuPercentUtilization() < (100 - (VM_PES / HOST_PES))) {
-                List<VmToHost> pairList = new ArrayList<>();
-                VmToHost vmToHost = new VmToHost();
-                vmToHost.setVm(host.getVmList().get(new Random().nextInt(host.getVmList().size())));
-                vmToHost.setHost(host1);
-                pairList.add(vmToHost);
-                hostMap.put(host.getId(), hostMap.get(host.getId()) - (VM_PES / HOST_PES));
-                hostMap.put(host1.getId(), hostMap.get(host1.getId()) + (VM_PES / HOST_PES));
-                return createResult(true, pairList, totalPower - totalPowerAfterMigrate);
+        Map.Entry<Long, Double> mostSaving = null;
+        for (Map.Entry<Long, Double> e : hostCpuMap.entrySet()) {
+            if (e.getKey() == host.getId()) {
+                continue;
             }
+            if (mostSaving == null) {
+                mostSaving = e;
+            }
+            if (mostSaving.getValue() > e.getValue()) {
+                mostSaving = e;
+            }
+        }
+
+        totalPowerAfterMigrate -= getPower(host, hostCpuMap.get(host.getId()) - (VM_PES / HOST_PES));
+        totalPowerAfterMigrate += getPower(hostMap.get(mostSaving.getKey()), mostSaving.getValue() + (VM_PES / HOST_PES));
+        if (totalPowerAfterMigrate < totalPower && (mostSaving.getValue() + (VM_PES / HOST_PES)) <= 100) {
+            List<VmToHost> pairList = new ArrayList<>();
+            VmToHost vmToHost = new VmToHost();
+            vmToHost.setVm(host.getVmList().get(new Random().nextInt(host.getVmList().size())));
+            vmToHost.setHost(hostMap.get(mostSaving.getKey()));
+            pairList.add(vmToHost);
+            hostCpuMap.put(host.getId(), hostCpuMap.get(host.getId()) - (VM_PES / HOST_PES));
+            hostCpuMap.put(mostSaving.getKey(), mostSaving.getValue() + (VM_PES / HOST_PES));
+            return createResult(true, pairList, totalPower - totalPowerAfterMigrate);
         }
 
         return createResult(false, null, totalPower - totalPowerAfterMigrate);
@@ -312,14 +324,6 @@ public class agent {
      * @return ExpectedResult
      */
     private ExpectedResult canDoAction2(Host host, List<Host> hostList, Map<Long, Double> hostMap, double totalPower) {
-        double utilization = host.getCpuPercentUtilization();
-        double sumFreeUt = 0.0;
-        for (Host host1 : hostList) {
-            sumFreeUt += (100 - host1.getCpuPercentUtilization());
-        }
-        if (utilization > sumFreeUt) {
-            return createResult(false, null, -10.0);
-        }
 
         //Polling strategy or lowest usage fisrt allocation strategy
         //return pollingAllocateVms(host,hostList,hostMap,totalPower);
@@ -337,13 +341,24 @@ public class agent {
      * @return
      */
     private ExpectedResult lowestUsageFirst(Host host, List<Host> hostList, Map<Long, Double> hostCpuMap, double totalPower) {
+        double utilization = hostCpuMap.get(host.getId());
         hostCpuMap.remove(host.getId());
+        double sumFreeUt = 0.0;
+        for (Map.Entry<Long, Double> e : hostCpuMap.entrySet()) {
+            sumFreeUt += (100 - e.getValue());
+        }
+        if (utilization > sumFreeUt) {
+            hostCpuMap.put(host.getId(), host.getCpuPercentUtilization());
+            return createResult(false, null, -10.0);
+        }
+
         //create min Heap
         PriorityQueue<HostAndCpuUtilization> minHeap = createPriorityQueue(hostCpuMap);
+
         Map<Long, Host> hostMap = hostList.stream().collect(Collectors.toMap(Host::getId, Function.identity()));
         List<VmToHost> migList = new ArrayList<>();
         double totalPowerAfterMigrate = totalPower;
-        totalPowerAfterMigrate -= getPower(host, host.getCpuPercentUtilization());
+        totalPowerAfterMigrate -= getPower(host, utilization);
         for (Vm vm : host.getVmList()) {
 
             HostAndCpuUtilization head = minHeap.peek();
@@ -488,8 +503,13 @@ public class agent {
         return result;
     }
 
+    /**
+     * @param host
+     * @param cpuUtilization
+     * @return
+     */
     private double getPower(Host host, double cpuUtilization) {
-        if (host.isActive()) {
+        if (host.isActive() && cpuUtilization >= 0) {
             return host.getPowerModel().getPower(cpuUtilization);
         } else {
             if (cpuUtilization > 0) {
@@ -499,5 +519,4 @@ public class agent {
             }
         }
     }
-
 }

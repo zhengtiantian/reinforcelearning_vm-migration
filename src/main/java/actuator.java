@@ -55,6 +55,13 @@ public class actuator {
         qtable = new double[state.length][action.length];
     }
 
+    /**
+     * Holman equation which used to update q-table
+     * @param state
+     * @param action
+     * @param reward
+     * @param nextState
+     */
     public void updateQtable(int state, int action, double reward, int nextState) {
         qtable[state][action] = (1 - learningRate) * qtable[state][action] + learningRate * (reward + discountFactor * max(qtable[nextState]) - qtable[state][action]);
     }

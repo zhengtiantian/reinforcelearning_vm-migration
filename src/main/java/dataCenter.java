@@ -1,6 +1,4 @@
 import org.cloudbus.cloudsim.allocationpolicies.VmAllocationPolicy;
-import org.cloudbus.cloudsim.allocationpolicies.VmAllocationPolicyFirstFit;
-import org.cloudbus.cloudsim.allocationpolicies.VmAllocationPolicyRandom;
 import org.cloudbus.cloudsim.allocationpolicies.VmAllocationPolicySimple;
 import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.datacenters.Datacenter;
@@ -9,10 +7,7 @@ import org.cloudbus.cloudsim.distributions.ContinuousDistribution;
 import org.cloudbus.cloudsim.distributions.UniformDistr;
 import org.cloudbus.cloudsim.hosts.Host;
 import org.cloudbus.cloudsim.hosts.HostSimple;
-import org.cloudbus.cloudsim.power.models.PowerModelDatacenter;
-import org.cloudbus.cloudsim.power.models.PowerModelDatacenterSimple;
 import org.cloudbus.cloudsim.power.models.PowerModelHostSimple;
-import org.cloudbus.cloudsim.power.models.PowerModelHostSpec;
 import org.cloudbus.cloudsim.provisioners.PeProvisionerSimple;
 import org.cloudbus.cloudsim.provisioners.ResourceProvisionerSimple;
 import org.cloudbus.cloudsim.resources.Pe;
@@ -58,7 +53,7 @@ public class dataCenter {
     /**
      * The max power a Host uses (in Watts).
      */
-    private static final int MAX_POWER = 1000;
+    private static final double MAX_POWER = 1000;
 
     private static ContinuousDistribution random = new UniformDistr();
 
@@ -111,7 +106,7 @@ public class dataCenter {
         final long storage = STORAGE; //in Megabytes
 
         final Host host = new HostSimple(ram, bw, storage, peList, false);
-        host.setPowerModel(new PowerModelHostSimple(MAX_POWER,STATIC_POWER));
+        host.setPowerModel(new PowerModelHostSimple(MAX_POWER, STATIC_POWER));
 //        host.setPowerModel(new PowerModelHostSpec(getCPUlist()));
         host.setRamProvisioner(new ResourceProvisionerSimple());
         host.setBwProvisioner(new ResourceProvisionerSimple());
@@ -136,12 +131,11 @@ public class dataCenter {
         return Optional.empty();
     }
 
-//    private List<Double> getCPUlist() {
-//        List result = new ArrayList();
-//        for (double i = 0.0; i <= 100.0; i++) {
-//            result.add(i);
-//        }
-//        return result;
-//    }
+    public double getStaticPower() {
+        return STATIC_POWER;
+    }
 
+    public double getMaxPower() {
+        return MAX_POWER;
+    }
 }
