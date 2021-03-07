@@ -71,7 +71,11 @@ public class agent {
     /**
      * The number of times the agent relearns after getting the action from the Q table and cannot execute
      */
-    private static int STUDYTIMESWHENFILLED = 3;
+    private static final int STUDYTIMESWHENFILLED = 3;
+
+    private static boolean allHostsHaveNoVms = true;
+
+    private static final double DATACENTER_UTILIZATION_THRESHOLD = 0.6;
 
 
     /**
@@ -149,6 +153,12 @@ public class agent {
                     //22/01/2021
                     listenBroker();
                     //25/01/2021
+                    if (allHostsHaveNoVms) {
+                        checkAllHosts(info.getDatacenter().getHostList());
+                        if (allHostsHaveNoVms) {
+                            continue;
+                        }
+                    }
                     migrateVms(info);
                 } catch (Exception e) {
                     System.out.println("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++" +
@@ -162,6 +172,15 @@ public class agent {
 //        while (simulation.isRunning()) {
 //
 //        }
+    }
+
+    private void checkAllHosts(List<Host> hostList) {
+        for (Host host : hostList) {
+            if (host.getVmList() != null && host.getVmList().size() > 0) {
+                allHostsHaveNoVms = false;
+            }
+        }
+
     }
 
     /**
@@ -181,13 +200,22 @@ public class agent {
      */
     private void migrateVms(EnvironmentInfo info) {
         List<Host> hostList = info.getDatacenter().getHostList();
-
+        hostList.sort(new Comparator<Host>() {
+            @Override
+            public int compare(Host o1, Host o2) {
+                if (o1.getCpuPercentUtilization() > o2.getCpuPercentUtilization()) {
+                    return 1;
+                } else if (o1.getCpuPercentUtilization() == o2.getCpuPercentUtilization()) {
+                    return 0;
+                } else {
+                    return -1;
+                }
+            }
+        });
         Map<Long, Double> hostCpuMap = hostList.stream().collect(Collectors.toMap(Host::getId, Host::getCpuPercentUtilization));
         double totalPower = getTotalPower(hostList, hostCpuMap);
         for (Host host : hostList) {
-            if (host.getVmList() == null || host.getVmList().size() == 0) {
-                continue;
-            }
+
             int state = act.getStateByCpuUtilizition(host.getCpuPercentUtilization());
             int action = act.getAction(state);
             ExpectedResult result = canDo(action, host, hostList, hostCpuMap, totalPower);
@@ -215,6 +243,14 @@ public class agent {
         }
 
 
+    }
+
+    private double dataCenterUtilization(Map<Long, Double> hostCpuMap) {
+        double totalUtilization = 0.0;
+        for (Map.Entry<Long, Double> e : hostCpuMap.entrySet()) {
+            totalUtilization += e.getValue();
+        }
+        return totalUtilization / (hostCpuMap.size() * 100.0);
     }
 
 
@@ -272,8 +308,19 @@ public class agent {
         return createResult(false, null, 0.0);
     }
 
+    private boolean istheleastUsedHost(Host host, Map<Long, Double> hostMap) {
+        double utilization = host.getCpuPercentUtilization();
+        for (Map.Entry<Long, Double> e : hostMap.entrySet()) {
+            if (utilization > e.getValue()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     /**
      * Determine whether can do action1(migrate one vm to other host)
+     * the mainly purpose is to reduce the risk of SLA(Service Level Agreement)
      *
      * @param host
      * @param hostList
@@ -282,25 +329,18 @@ public class agent {
      * @return ExpectedResult
      */
     private ExpectedResult canDoAction1(Host host, List<Host> hostList, Map<Long, Double> hostCpuMap, double totalPower) {
+        boolean theLeastUsed = istheleastUsedHost(host, hostCpuMap);
+        if (theLeastUsed) {
+            return createResult(true, null, 0.0);
+        }
         Map<Long, Host> hostMap = hostList.stream().collect(Collectors.toMap(Host::getId, Function.identity()));
         double totalPowerAfterMigrate = totalPower;
-
-        Map.Entry<Long, Double> mostSaving = null;
-        for (Map.Entry<Long, Double> e : hostCpuMap.entrySet()) {
-            if (e.getKey() == host.getId()) {
-                continue;
-            }
-            if (mostSaving == null) {
-                mostSaving = e;
-            }
-            if (mostSaving.getValue() > e.getValue()) {
-                mostSaving = e;
-            }
-        }
-
+        Map.Entry<Long, Double> mostSaving = getMostSavingTargatHost(hostCpuMap, host);
         totalPowerAfterMigrate -= getPower(host, hostCpuMap.get(host.getId()) - (VM_PES / HOST_PES));
         totalPowerAfterMigrate += getPower(hostMap.get(mostSaving.getKey()), mostSaving.getValue() + (VM_PES / HOST_PES));
-        if (totalPowerAfterMigrate < totalPower && (mostSaving.getValue() + (VM_PES / HOST_PES)) <= 100) {
+        if ((mostSaving.getValue() + (VM_PES / HOST_PES)) <= 100
+                && (mostSaving.getValue() + (VM_PES / HOST_PES)) < hostCpuMap.get(host.getId())
+                && ((totalPowerAfterMigrate <= totalPower) || hostCpuMap.get(host.getId()) > 80)) {
             List<VmToHost> pairList = new ArrayList<>();
             VmToHost vmToHost = new VmToHost();
             vmToHost.setVm(host.getVmList().get(new Random().nextInt(host.getVmList().size())));
@@ -308,10 +348,35 @@ public class agent {
             pairList.add(vmToHost);
             hostCpuMap.put(host.getId(), hostCpuMap.get(host.getId()) - (VM_PES / HOST_PES));
             hostCpuMap.put(mostSaving.getKey(), mostSaving.getValue() + (VM_PES / HOST_PES));
-            return createResult(true, pairList, totalPower - totalPowerAfterMigrate);
+            return createResult(true, pairList, 50.0);
         }
 
-        return createResult(false, null, totalPower - totalPowerAfterMigrate);
+        return createResult(false, null, -20.0);
+    }
+
+    private Map.Entry<Long, Double> getMostSavingTargatHost(Map<Long, Double> hostCpuMap, Host host) {
+        Map.Entry<Long, Double> mostSaving = null;
+        Map.Entry<Long, Double> mostSavingMoreThanZero = null;
+        for (Map.Entry<Long, Double> e : hostCpuMap.entrySet()) {
+            if (e.getKey() == host.getId()) {
+                continue;
+            }
+            if (mostSaving == null) {
+                mostSaving = e;
+            }
+            if (mostSavingMoreThanZero == null && e.getValue() > 0) {
+                mostSavingMoreThanZero = e;
+            }
+
+            if (mostSaving.getValue() > e.getValue()) {
+                mostSaving = e;
+            }
+
+            if (mostSavingMoreThanZero != null && mostSavingMoreThanZero.getValue() > 0 && mostSavingMoreThanZero.getValue() > e.getValue()) {
+                mostSavingMoreThanZero = e;
+            }
+        }
+        return mostSavingMoreThanZero == null ? mostSaving : mostSavingMoreThanZero;
     }
 
     /**
@@ -341,6 +406,10 @@ public class agent {
      * @return
      */
     private ExpectedResult lowestUsageFirst(Host host, List<Host> hostList, Map<Long, Double> hostCpuMap, double totalPower) {
+        double rate = dataCenterUtilization(hostCpuMap);
+        if (rate >= DATACENTER_UTILIZATION_THRESHOLD) {
+            return createResult(true, null, 0.0);
+        }
         double utilization = hostCpuMap.get(host.getId());
         hostCpuMap.remove(host.getId());
         double sumFreeUt = 0.0;

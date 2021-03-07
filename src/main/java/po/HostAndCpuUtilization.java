@@ -1,10 +1,14 @@
 package po;
 
+import org.cloudbus.cloudsim.hosts.Host;
+
 public class HostAndCpuUtilization {
 
     private long hostId;
 
     private double cpuUtilization;
+
+    private Host host;
 
     public long getHostId() {
         return hostId;
@@ -20,5 +24,13 @@ public class HostAndCpuUtilization {
 
     public void setCpuUtilization(double cpuUtilization) {
         this.cpuUtilization = cpuUtilization;
+    }
+
+    public Host getHost() {
+        return host;
+    }
+
+    public void setHost(Host host) {
+        this.host = host;
     }
 }
