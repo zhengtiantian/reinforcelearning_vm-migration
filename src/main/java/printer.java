@@ -22,10 +22,9 @@ public class printer {
                         vm.getHost().getId())
         );
 
-        for (Host host : info.getDatacenter().getHostList()) {
-//            System.out.println(host.getFirstStartTime());
-            printHostCpuUtilizationAndPowerConsumption(simulation,host);
-        }
+//        for (Host host : info.getDatacenter().getHostList()) {
+//            printHostCpuUtilizationAndPowerConsumption(simulation,host);
+//        }
 
 
         System.out.println();

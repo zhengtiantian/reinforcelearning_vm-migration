@@ -49,7 +49,7 @@ public class agent {
     /**
      * Indicates the interval of historical power consumption of the host
      */
-    private static double INTERVAL = 3.0;
+    private static double INTERVAL = 5;
 
     /**
      * How long does it take to get information from the queue
@@ -129,7 +129,7 @@ public class agent {
                 info.setBroker(envirnment.getBroker());
                 queue.offer(info);
                 simulation.runFor(INTERVAL);
-                waitSomeMillis(10 * 1000);
+                waitSomeMillis(5 * 1000);
             }
         } catch (Exception e) {
             System.out.println("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++" +
@@ -167,7 +167,7 @@ public class agent {
                 }
 
             }
-            waitSomeMillis(10 * 1000);
+            waitSomeMillis(5 * 1000);
         }
 //        while (simulation.isRunning()) {
 //
@@ -199,7 +199,11 @@ public class agent {
      * @param info
      */
     private void migrateVms(EnvironmentInfo info) {
-        List<Host> hostList = info.getDatacenter().getHostList();
+        List<Host> hostList = new ArrayList<>(info.getDatacenter().getHostList());
+        for (Host host : hostList) {
+            System.out.println("the cpu utilization of host "+host.getId()+" is "+host.getCpuPercentUtilization());
+        }
+
         hostList.sort(new Comparator<Host>() {
             @Override
             public int compare(Host o1, Host o2) {
@@ -215,7 +219,9 @@ public class agent {
         Map<Long, Double> hostCpuMap = hostList.stream().collect(Collectors.toMap(Host::getId, Host::getCpuPercentUtilization));
         double totalPower = getTotalPower(hostList, hostCpuMap);
         for (Host host : hostList) {
-
+            if(!host.isActive()){
+                continue;
+            }
             int state = act.getStateByCpuUtilizition(host.getCpuPercentUtilization());
             int action = act.getAction(state);
             ExpectedResult result = canDo(action, host, hostList, hostCpuMap, totalPower);
@@ -336,8 +342,8 @@ public class agent {
         Map<Long, Host> hostMap = hostList.stream().collect(Collectors.toMap(Host::getId, Function.identity()));
         double totalPowerAfterMigrate = totalPower;
         Map.Entry<Long, Double> mostSaving = getMostSavingTargatHost(hostCpuMap, host);
-        totalPowerAfterMigrate -= getPower(host, hostCpuMap.get(host.getId()) - (VM_PES / HOST_PES));
-        totalPowerAfterMigrate += getPower(hostMap.get(mostSaving.getKey()), mostSaving.getValue() + (VM_PES / HOST_PES));
+        totalPowerAfterMigrate -= (getPower(host, hostCpuMap.get(host.getId()))-getPower(host, hostCpuMap.get(host.getId()) - (VM_PES / HOST_PES)));
+        totalPowerAfterMigrate += (getPower(hostMap.get(mostSaving.getKey()), mostSaving.getValue() + (VM_PES / HOST_PES))-getPower(hostMap.get(mostSaving.getKey()), mostSaving.getValue()));
         if ((mostSaving.getValue() + (VM_PES / HOST_PES)) <= 100
                 && (mostSaving.getValue() + (VM_PES / HOST_PES)) < hostCpuMap.get(host.getId())
                 && ((totalPowerAfterMigrate <= totalPower) || hostCpuMap.get(host.getId()) > 80)) {
@@ -432,23 +438,21 @@ public class agent {
 
             HostAndCpuUtilization head = minHeap.peek();
 
-            if (head == null || head.getCpuUtilization() >= 100) {
-                updateHostMap(host, hostCpuMap, minHeap);
+            if (head == null || head.getCpuUtilization() >= 100 || head.getCpuUtilization() + (VM_PES / HOST_PES) > 100) {
+                hostCpuMap.put(host.getId(), utilization);
                 return createResult(false, null, -10.0);
             }
 
-            if (head.getCpuUtilization() + (VM_PES / HOST_PES) > 100) {
-                updateHostMap(host, hostCpuMap, minHeap);
-                continue;
-            }
+
             Host targetHost = hostMap.get(head.getHostId());
             totalPowerAfterMigrate -= getPower(targetHost, head.getCpuUtilization());
             totalPowerAfterMigrate += getPower(targetHost, head.getCpuUtilization() + (VM_PES / HOST_PES));
 
             if (totalPowerAfterMigrate >= totalPower) {
-                updateHostMap(host, hostCpuMap, minHeap);
+                hostCpuMap.put(host.getId(), utilization);
                 return createResult(false, null, totalPower - totalPowerAfterMigrate);
             }
+
             VmToHost vmToHost = new VmToHost();
             vmToHost.setVm(vm);
             vmToHost.setHost(targetHost);
@@ -459,7 +463,12 @@ public class agent {
         }
 
         // update HostMap
-        updateHostMap(host, hostCpuMap, minHeap);
+        if(migList.size()>0){
+            updateHostMap(host, hostCpuMap, minHeap);
+        }else{
+            hostCpuMap.put(host.getId(), utilization);
+        }
+
         return createResult(true, migList, totalPower - totalPowerAfterMigrate);
     }
 

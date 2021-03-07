@@ -28,7 +28,7 @@ public class dataCenter {
     /**
      * total core of single host
      */
-    private static final int HOST_PES = 64;
+    private static final int HOST_PES = 32;
     /**
      * total memory of single host
      */
@@ -44,16 +44,16 @@ public class dataCenter {
     /**
      * schedul interval
      */
-    private static final int SCHEDULING_INTERVAL = 2;
+    private static final int SCHEDULING_INTERVAL = 10;
     /**
      * Defines the power a Host uses, even if it's idle (in Watts).
      */
-    private static final double STATIC_POWER = 200;
+    private static final double STATIC_POWER = 35;
 
     /**
      * The max power a Host uses (in Watts).
      */
-    private static final double MAX_POWER = 1000;
+    private static final double MAX_POWER = 50;
 
     private static ContinuousDistribution random = new UniformDistr();
 
