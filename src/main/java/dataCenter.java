@@ -1,4 +1,5 @@
 import org.cloudbus.cloudsim.allocationpolicies.VmAllocationPolicy;
+import org.cloudbus.cloudsim.allocationpolicies.VmAllocationPolicyRoundRobin;
 import org.cloudbus.cloudsim.allocationpolicies.VmAllocationPolicySimple;
 import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.datacenters.Datacenter;
@@ -83,7 +84,8 @@ public class dataCenter {
             hostList.add(host);
         }
         VmAllocationPolicySimple vmAllocationPolicy = new VmAllocationPolicySimple();
-//        vmAllocationPolicy.setFindHostForVmFunction(this::findRandomSuitableHostForVm);
+//        VmAllocationPolicyRoundRobin vmAllocationPolicy = new VmAllocationPolicyRoundRobin();
+        vmAllocationPolicy.setFindHostForVmFunction(this::findRandomSuitableHostForVm);
         DatacenterSimple dc = new DatacenterSimple(simulation, hostList, vmAllocationPolicy);
 
         dc.setSchedulingInterval(SCHEDULING_INTERVAL);
@@ -115,9 +117,7 @@ public class dataCenter {
         return host;
     }
 
-    public int getHostPes() {
-        return HOST_PES;
-    }
+
 
     private Optional<Host> findRandomSuitableHostForVm(final VmAllocationPolicy vmAllocationPolicy, final Vm vm) {
         final List<Host> hostList = vmAllocationPolicy.getHostList();
@@ -138,4 +138,13 @@ public class dataCenter {
     public double getMaxPower() {
         return MAX_POWER;
     }
+
+    public int getHostPes() {
+        return HOST_PES;
+    }
+
+    public int getHosts(){
+        return HOSTS;
+    }
+
 }

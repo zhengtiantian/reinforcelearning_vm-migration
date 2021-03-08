@@ -87,7 +87,7 @@ public class agent {
      */
     public static void main(String[] args) {
         Log.setLevel(Level.DEBUG);
-        ExecutorService ex = Executors.newFixedThreadPool(2);
+        ExecutorService ex = Executors.newFixedThreadPool(3);
 
         agent agent = new agent();
 
@@ -105,6 +105,13 @@ public class agent {
                 @Override
                 public void run() {
                     agent.getInfo();
+                }
+            });
+
+            ex.submit(new Runnable() {
+                @Override
+                public void run() {
+                    printer.recordPowerConsumption(envirnment);
                 }
             });
         } catch (Exception e) {
@@ -143,16 +150,10 @@ public class agent {
      * get the information from the queue then sent the assigment of create vms and vm migration to the environment
      */
     public void getInfo() {
-
         for (int i = 0; i < 100000; i++) {
             if (!queue.isEmpty()) {
                 EnvironmentInfo info = queue.poll();
                 try {
-                    //print the cpu and ram usage of HOST and the cpu usage of VM
-                    printer.print(info, simulation);
-                    //22/01/2021
-                    listenBroker();
-                    //25/01/2021
                     if (allHostsHaveNoVms) {
                         checkAllHosts(info.getDatacenter().getHostList());
                         if (allHostsHaveNoVms) {
@@ -169,9 +170,7 @@ public class agent {
             }
             waitSomeMillis(5 * 1000);
         }
-//        while (simulation.isRunning()) {
-//
-//        }
+
     }
 
     private void checkAllHosts(List<Host> hostList) {

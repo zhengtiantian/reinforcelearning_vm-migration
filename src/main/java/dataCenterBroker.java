@@ -39,14 +39,20 @@ public class dataCenterBroker {
      */
     private static final int CLOUDLET_LENGTH = 10000;
 
+    private static final int MIPS = 1000;
+
     private int createsVms;
     private List<Cloudlet> cloudletList;
     private List<Vm> vmList;
     private static DatacenterBroker broker;
+    private static dataCenter dataCenter = new dataCenter();
+    private static double CREATEVMSINTERVAL = CLOUDLET_LENGTH / MIPS;
 
+    static double[] createVmsRate = new double[]{0.05, 0.1, 0.1, 0.05, 0.3, 0.1, 0.05, 0.05, 0.15, 0.05};
 
     /**
      * get data center broker
+     *
      * @param simulation
      * @return
      */
@@ -54,23 +60,28 @@ public class dataCenterBroker {
         broker = new DatacenterBrokerSimple(simulation);
         vmList = new ArrayList<>(2);
         cloudletList = new ArrayList<>(4);
-        createVmsAndCloudlet(2, 1);
+        int totalVms = dataCenter.getHosts() * 20;
+        for (int i = 0; i < 10; i++) {
+            createVmsAndCloudlet((int) (totalVms * createVmsRate[i % 10]), 1, i * CREATEVMSINTERVAL);
+        }
         return broker;
     }
 
     /**
      * create vms and cloudlets
+     *
      * @param createsVms
      * @param createCloudlet
      */
-    public void createVmsAndCloudlet(int createsVms, int createCloudlet) {
+    public void createVmsAndCloudlet(int createsVms, int createCloudlet, double submissionDelay) {
         List<Vm> newVmList = new ArrayList<>(createsVms);
         List<Cloudlet> newCloudletList = new ArrayList<>(createCloudlet);
         for (int i = 0; i < createsVms; i++) {
-            Vm vm = createVm();
+            Vm vm = createVm(submissionDelay);
             newVmList.add(vm);
             for (int j = 0; j < createCloudlet; j++) {
                 Cloudlet cloudlet = createCloudlet(vm);
+                cloudlet.addOnFinishListener(this::cloudletProcessingUpdateListener);
                 newCloudletList.add(cloudlet);
             }
         }
@@ -80,21 +91,30 @@ public class dataCenterBroker {
         broker.submitCloudletList(newCloudletList);
     }
 
+    private void cloudletProcessingUpdateListener(CloudletVmEventInfo info) {
+        Cloudlet cloudlet = info.getCloudlet();
+        Vm vm = cloudlet.getVm();
+        System.out.println("the vm:" + vm.getId() + " is destorying");
+        vm.getHost().destroyVm(vm);
+    }
+
     /**
      * create vms
+     *
      * @return
      */
-    public Vm createVm() {
+    public Vm createVm(double submissionDelay) {
         final int id = createsVms++;
-        Vm vm = new VmSimple(id, 1000, VM_PES)
-                .setRam(RAM).setBw(BW).setSize(SIZE)
-                .setCloudletScheduler(new CloudletSchedulerTimeShared());
+        Vm vm = new VmSimple(id, MIPS, VM_PES)
+                .setRam(RAM).setBw(BW).setSize(SIZE).setCloudletScheduler(new CloudletSchedulerTimeShared());
         vm.getUtilizationHistory().enable();
+        vm.setSubmissionDelay(submissionDelay);
         return vm;
     }
 
     /**
      * create cloudlets
+     *
      * @param vm
      * @return
      */
@@ -113,10 +133,12 @@ public class dataCenterBroker {
     }
 
     public void createVmsAndCloudlet(CloudletVmEventInfo cloudletVmEventInfo) {
-        createVmsAndCloudlet(4, 1);
+//        createVmsAndCloudlet(4, 1);
     }
 
-    public int getVmPes(){
+    public int getVmPes() {
         return VM_PES;
     }
+
+
 }

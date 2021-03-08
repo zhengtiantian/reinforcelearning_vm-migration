@@ -6,30 +6,45 @@ import po.EnvironmentInfo;
 import util.Conversion;
 
 import java.util.DoubleSummaryStatistics;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class printer {
 
-    public void print(EnvironmentInfo info, CloudSim simulation) {
-        List<Vm> list = info.getBroker().getVmCreatedList();
-        list.forEach(vm ->
+    static Map<Long, Map<Integer, Double>> powerMap = new HashMap<>();
 
-                System.out.printf(
-                        "\t\tVm %d CPU Usage: %6.2f%% (%2d vCPUs. Running Cloudlets: #%d). HOST %d %n",
-                        vm.getId(), vm.getCpuPercentUtilization() * 100.0, vm.getNumberOfPes(),
-                        vm.getCloudletScheduler().getCloudletExecList().size(),
-                        vm.getHost().getId())
-        );
+    static double totalPower = 0;
 
-//        for (Host host : info.getDatacenter().getHostList()) {
-//            printHostCpuUtilizationAndPowerConsumption(simulation,host);
-//        }
+    public void recordPowerConsumption(envirnment envirnment) {
+        CloudSim simulation = envirnment.getSimulation();
+        int time = 1;
+        initialPowerMap(envirnment.getDatacenter().getHostList());
+        while (simulation.isRunning()) {
+            List<Host> hostList = envirnment.getDatacenter().getHostList();
+            for (Host host : hostList) {
+                Map<Integer, Double> hostMap = powerMap.get(host.getId());
+                double power = getPower(host, host.getCpuPercentUtilization());
+                hostMap.put(time, power);
+                totalPower += power;
+                System.out.println("time:" + time + "host:" + host.getId() + "isactive: " + host.isActive() + "cpu utilization:" + host.getCpuPercentUtilization() + " power:" + power + " * 1s = " + power);
+            }
+            System.out.println("the total power consumption of the datacenter:" + totalPower);
+            time++;
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 
+    private void initialPowerMap(List<Host> hostList) {
+        for (Host host : hostList) {
+            Map<Integer, Double> hostMap = new HashMap<>();
+            powerMap.put(host.getId(), hostMap);
+        }
 
-        System.out.println();
-
-        System.out.printf("%n%n");
     }
 
     private void printHostCpuUtilizationAndPowerConsumption(CloudSim simulation, Host host) {
@@ -44,7 +59,7 @@ public class printer {
             utilizationHistoryTimeInterval = entry.getKey() - prevTime;
             //The total Host's CPU utilization for the time specified by the map key
             final double utilizationPercent = entry.getValue().getSum();
-            final double watts = getPower(host,utilizationPercent);
+            final double watts = getPower(host, utilizationPercent);
             //Energy consumption in the time interval
             final double wattsSec = watts * utilizationHistoryTimeInterval;
             //Energy consumption in the entire simulation time
