@@ -1,3 +1,5 @@
+package m;
+
 import java.util.Random;
 
 /**
@@ -51,7 +53,7 @@ public class actuator {
     /**
      * Initial Q-table
      */
-    public void initQtalbe() {
+    public static void initQtalbe() {
         qtable = new double[state.length][action.length];
     }
 
@@ -62,12 +64,12 @@ public class actuator {
      * @param reward
      * @param nextState
      */
-    public void updateQtable(int state, int action, double reward, int nextState) {
+    public static void updateQtable(int state, int action, double reward, int nextState) {
         qtable[state][action] = (1 - learningRate) * qtable[state][action] + learningRate * (reward + discountFactor * max(qtable[nextState]) - qtable[state][action]);
     }
 
 
-    private double max(double[] Qs) {
+    private static double max(double[] Qs) {
         double max = Double.MIN_VALUE;
         for (double q : Qs) {
             if (q > max) {
@@ -163,13 +165,28 @@ public class actuator {
      * @param nextState
      * @return
      */
-    public int getReward(int state, int action, int nextState) {
+    public static int getReward(int state, int action, int nextState) {
         if (action != 0) {
             return state * 10;
         } else if (action == 1 && state > nextState) {
             return (state - nextState) * 10;
         } else {
             return 0;
+        }
+    }
+
+    /**
+     * inicial q-table
+     */
+    public static void iniQtable() {
+        initQtalbe();
+        for (int s : state) {
+            for (int a : action) {
+                for (int nextState : state) {
+                    int reward = getReward(s, a, nextState);
+                    updateQtable(s, a, reward, nextState);
+                }
+            }
         }
     }
 

@@ -1,3 +1,6 @@
+package m;
+
+import m.util.Constant;
 import org.cloudbus.cloudsim.brokers.DatacenterBroker;
 import org.cloudbus.cloudsim.brokers.DatacenterBrokerSimple;
 import org.cloudbus.cloudsim.cloudlets.Cloudlet;
@@ -14,39 +17,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class dataCenterBroker {
-    /**
-     * total cores of single vm
-     */
-    private static final int VM_PES = 2;
-    /**
-     * total memory of single vm
-     */
-    private static final int RAM = 2048;
-    /**
-     * total internet bandwidth of single vm
-     */
-    private static final int BW = 1000;
-    /**
-     * total storage of single vm
-     */
-    private static final int SIZE = 10000;
-    /**
-     * total cores of single cloudlet needed
-     */
-    private static final int CLOUDLET_PES = 2;
-    /**
-     * Each cloudlet execution time
-     */
-    private static final int CLOUDLET_LENGTH = 10000;
 
-    private static final int MIPS = 1000;
+    private static Constant constant = new Constant();
 
     private int createsVms;
     private List<Cloudlet> cloudletList;
     private List<Vm> vmList;
     private static DatacenterBroker broker;
-    private static dataCenter dataCenter = new dataCenter();
-    private static double CREATEVMSINTERVAL = CLOUDLET_LENGTH / MIPS;
+    private static double CREATEVMSINTERVAL = constant.CLOUDLET_LENGTH / constant.VM_MIPS;
 
     static double[] createVmsRate = new double[]{0.05, 0.1, 0.1, 0.05, 0.3, 0.1, 0.05, 0.05, 0.15, 0.05};
 
@@ -60,7 +38,7 @@ public class dataCenterBroker {
         broker = new DatacenterBrokerSimple(simulation);
         vmList = new ArrayList<>(2);
         cloudletList = new ArrayList<>(4);
-        int totalVms = dataCenter.getHosts() * 20;
+        int totalVms = constant.HOSTS * 20;
         for (int i = 0; i < 10; i++) {
             createVmsAndCloudlet((int) (totalVms * createVmsRate[i % 10]), 1, i * CREATEVMSINTERVAL);
         }
@@ -105,8 +83,8 @@ public class dataCenterBroker {
      */
     public Vm createVm(double submissionDelay) {
         final int id = createsVms++;
-        Vm vm = new VmSimple(id, MIPS, VM_PES)
-                .setRam(RAM).setBw(BW).setSize(SIZE).setCloudletScheduler(new CloudletSchedulerTimeShared());
+        Vm vm = new VmSimple(id, constant.VM_MIPS, constant.VM_PES)
+                .setRam(constant.VM_RAM).setBw(constant.VM_BW).setSize(constant.VM_SIZE).setCloudletScheduler(new CloudletSchedulerTimeShared());
         vm.getUtilizationHistory().enable();
         vm.setSubmissionDelay(submissionDelay);
         return vm;
@@ -120,7 +98,7 @@ public class dataCenterBroker {
      */
     public Cloudlet createCloudlet(Vm vm) {
         UtilizationModel utilizationModel = new UtilizationModelFull();
-        Cloudlet cloudlet = new CloudletSimple(CLOUDLET_LENGTH, CLOUDLET_PES)
+        Cloudlet cloudlet = new CloudletSimple(constant.CLOUDLET_LENGTH, constant.CLOUDLET_PES)
                 .setFileSize(1024)
                 .setOutputSize(1024)
                 .setUtilizationModel(utilizationModel)
@@ -128,17 +106,6 @@ public class dataCenterBroker {
         return cloudlet;
     }
 
-    public Cloudlet getLastCloudletFromList() {
-        return cloudletList.get(cloudletList.size() - 1);
-    }
-
-    public void createVmsAndCloudlet(CloudletVmEventInfo cloudletVmEventInfo) {
-//        createVmsAndCloudlet(4, 1);
-    }
-
-    public int getVmPes() {
-        return VM_PES;
-    }
 
 
 }

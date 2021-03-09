@@ -1,5 +1,7 @@
+package m;
+
+import m.util.Constant;
 import org.cloudbus.cloudsim.allocationpolicies.VmAllocationPolicy;
-import org.cloudbus.cloudsim.allocationpolicies.VmAllocationPolicyRoundRobin;
 import org.cloudbus.cloudsim.allocationpolicies.VmAllocationPolicySimple;
 import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.datacenters.Datacenter;
@@ -22,39 +24,7 @@ import java.util.Optional;
 
 public class dataCenter {
 
-    /**
-     * total hosts
-     */
-    private static final int HOSTS = 2;
-    /**
-     * total core of single host
-     */
-    private static final int HOST_PES = 32;
-    /**
-     * total memory of single host
-     */
-    private static final long RAM = 131072; //in Megabytes
-    /**
-     * total internet bandwidth of single host
-     */
-    private static final long BW = 10240; //in Megabits/s
-    /**
-     * total storage of single host
-     */
-    private static final long STORAGE = 10240000; //in Megabytes
-    /**
-     * schedul interval
-     */
-    private static final int SCHEDULING_INTERVAL = 10;
-    /**
-     * Defines the power a Host uses, even if it's idle (in Watts).
-     */
-    private static final double STATIC_POWER = 35;
-
-    /**
-     * The max power a Host uses (in Watts).
-     */
-    private static final double MAX_POWER = 50;
+    private static Constant constant = new Constant();
 
     private static ContinuousDistribution random = new UniformDistr();
 
@@ -78,8 +48,8 @@ public class dataCenter {
      * @return
      */
     private Datacenter createDatacenter(CloudSim simulation) {
-        final List<Host> hostList = new ArrayList<>(HOSTS);
-        for (int i = 0; i < HOSTS; i++) {
+        final List<Host> hostList = new ArrayList<>(constant.HOSTS);
+        for (int i = 0; i < constant.HOSTS; i++) {
             Host host = createHost();
             hostList.add(host);
         }
@@ -88,7 +58,7 @@ public class dataCenter {
         vmAllocationPolicy.setFindHostForVmFunction(this::findRandomSuitableHostForVm);
         DatacenterSimple dc = new DatacenterSimple(simulation, hostList, vmAllocationPolicy);
 
-        dc.setSchedulingInterval(SCHEDULING_INTERVAL);
+        dc.setSchedulingInterval(constant.SCHEDULING_INTERVAL);
         return dc;
     }
 
@@ -98,17 +68,17 @@ public class dataCenter {
      * @return
      */
     private Host createHost() {
-        final List<Pe> peList = new ArrayList<>(HOSTS);
-        for (int i = 0; i < HOST_PES; i++) {
+        final List<Pe> peList = new ArrayList<>(constant.HOSTS);
+        for (int i = 0; i < constant.HOST_PES; i++) {
             peList.add(new PeSimple(1000, new PeProvisionerSimple()));
         }
 
-        final long ram = RAM; //in Megabytes
-        final long bw = BW; //in Megabits/s
-        final long storage = STORAGE; //in Megabytes
+        final long ram = constant.HOST_RAM; //in Megabytes
+        final long bw = constant.HOST_BW; //in Megabits/s
+        final long storage = constant.HOST_STORAGE; //in Megabytes
 
         final Host host = new HostSimple(ram, bw, storage, peList, false);
-        host.setPowerModel(new PowerModelHostSimple(MAX_POWER, STATIC_POWER));
+        host.setPowerModel(new PowerModelHostSimple(constant.HOST_MAX_POWER, constant.HOST_STATIC_POWER));
 //        host.setPowerModel(new PowerModelHostSpec(getCPUlist()));
         host.setRamProvisioner(new ResourceProvisionerSimple());
         host.setBwProvisioner(new ResourceProvisionerSimple());
@@ -131,20 +101,5 @@ public class dataCenter {
         return Optional.empty();
     }
 
-    public double getStaticPower() {
-        return STATIC_POWER;
-    }
-
-    public double getMaxPower() {
-        return MAX_POWER;
-    }
-
-    public int getHostPes() {
-        return HOST_PES;
-    }
-
-    public int getHosts(){
-        return HOSTS;
-    }
 
 }
