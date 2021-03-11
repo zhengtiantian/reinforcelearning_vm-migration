@@ -3,30 +3,25 @@ package m;
 import ch.qos.logback.classic.Level;
 import m.migrationAlgorithm.Migration;
 import m.migrationAlgorithm.ReinforcementLearning;
-import m.po.VmToHost;
-import m.util.printer;
+import m.po.ProcessResult;
+import m.util.Constant;
 import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.hosts.Host;
 import org.cloudbus.cloudsim.vms.Vm;
 import org.cloudsimplus.util.Log;
 import m.po.EnvironmentInfo;
-import sun.misc.VM;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.stream.Collectors;
+
 
 /**
  * @author zhengxiangyu
  */
 public class agent {
 
-    /**
-     * get the information from the environment
-     */
-    private static ConcurrentLinkedQueue<EnvironmentInfo> queue = new ConcurrentLinkedQueue<>();
 
     /**
      * get the implement of environment
@@ -38,26 +33,13 @@ public class agent {
      */
     private static final CloudSim simulation = envirnment.getSimulation();
 
-
-    /**
-     * get m.migrationAlgorithm.printer
-     */
-    private static m.util.printer printer = new printer();
-
-    /**
-     * Indicates the interval of historical power consumption of the host
-     */
-    private static double INTERVAL = 5;
-
-    /**
-     * How long does it take to get information from the queue
-     */
-    private static int INTERVAL_INT = 3000;
+    private static Constant constant = new Constant();
 
     private static boolean allHostsHaveNoVms = true;
 
     private static Migration migrate = new ReinforcementLearning();
 
+    private static ConcurrentLinkedQueue<EnvironmentInfo> queue = envirnment.getQueue();
 
     /**
      * main function create two threads
@@ -80,7 +62,7 @@ public class agent {
                     agent.startSimulation();
                 }
             });
-            waitSomeMillis(60 * 1000);
+            waitSomeMillis((long)constant.SIMULATION_RUNNING_INTERVAL*1000);
             // create a thread to get cpu and ram from HOST and VM
             ex.submit(new Runnable() {
                 @Override
@@ -89,18 +71,13 @@ public class agent {
                 }
             });
 
-            ex.submit(new Runnable() {
-                @Override
-                public void run() {
-                    printer.recordPowerConsumption(envirnment);
-                }
-            });
         } catch (Exception e) {
             System.out.println(e);
             e.printStackTrace();
         }
 
     }
+
 
 
     /**
@@ -110,14 +87,9 @@ public class agent {
         try {
             envirnment.start();
             actuator.iniQtable();
-            waitSomeMillis(60 * 1000);
             while (simulation.isRunning()) {
-                EnvironmentInfo info = new EnvironmentInfo();
-                info.setDatacenter(envirnment.getDatacenter());
-                info.setBroker(envirnment.getBroker());
-                queue.offer(info);
-                simulation.runFor(INTERVAL);
-                waitSomeMillis(5 * 1000);
+                simulation.runFor(constant.SIMULATION_RUNNING_INTERVAL);
+                waitSomeMillis((long)constant.SIMULATION_RUNNING_INTERVAL*1000);
             }
         } catch (Exception e) {
             System.out.println("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++" +
@@ -127,11 +99,13 @@ public class agent {
 
     }
 
+
+
     /**
      * get the information from the queue then sent the assigment of create vms and vm migration to the environment
      */
     public void getInfo() {
-        for (int i = 0; i < 100000; i++) {
+        while (simulation.isRunning()) {
             if (!queue.isEmpty()) {
                 EnvironmentInfo info = queue.poll();
                 try {
@@ -142,8 +116,7 @@ public class agent {
                         }
                     }
 
-
-                    processInfo(info);
+//                    processInfo(info);
                 } catch (Exception e) {
                     System.out.println("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++" +
                             "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
@@ -151,25 +124,39 @@ public class agent {
                 }
 
             }
-            waitSomeMillis(5 * 1000);
+            waitSomeMillis(1000);
         }
 
     }
 
     private void processInfo(EnvironmentInfo info) {
-        Map<Vm, Host> vmHostMap = migrate.processMigration(info);
-        migrateVms(vmHostMap);
+        ProcessResult pr = migrate.processMigration(info);
+        shutdownHosts(pr.getShutdownHosts());
+        migrateVms(pr.getVmToHostMap());
+    }
+
+    private void shutdownHosts(Map<Long, Host> shutdownHosts) {
+        if (shutdownHosts != null && shutdownHosts.size() > 0) {
+            for (Map.Entry<Long, Host> e : shutdownHosts.entrySet()) {
+                Host host = e.getValue();
+                if (host.isActive()) {
+                    host.setActive(false);
+                }
+            }
+
+        }
     }
 
     private void migrateVms(Map<Vm, Host> vmHostMap) {
         if (vmHostMap != null && vmHostMap.size() > 0) {
             for (Map.Entry<Vm, Host> vm : vmHostMap.entrySet()) {
-                envirnment.getDatacenter().requestVmMigration(vm.getKey(),vm.getValue());
+                Host host = vm.getValue();
+                if (!host.isActive()) {
+                    host.setActive(true);
+                }
+                envirnment.getDatacenter().requestVmMigration(vm.getKey(), vm.getValue());
             }
         }
-
-
-
     }
 
     private void checkAllHosts(List<Host> hostList) {

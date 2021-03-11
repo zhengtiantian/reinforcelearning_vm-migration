@@ -2,15 +2,11 @@ package m.migrationAlgorithm;
 
 import m.actuator;
 import m.envirnment;
-import m.po.EnvironmentInfo;
-import m.po.ExpectedResult;
-import m.po.HostAndCpuUtilization;
-import m.po.VmToHost;
+import m.po.*;
 import m.util.Constant;
 import m.util.PowerTool;
 import org.cloudbus.cloudsim.hosts.Host;
 import org.cloudbus.cloudsim.vms.Vm;
-import sun.misc.VM;
 
 import java.util.*;
 import java.util.function.Function;
@@ -48,14 +44,17 @@ public class ReinforcementLearning implements Migration {
 
     private static Map<Long, Host> hostMap;
 
+    private static Map<Long, Host> shutdownHosts;
+
     private static double totalPower;
 
     @Override
-    public Map<Vm, Host> processMigration(EnvironmentInfo info) {
+    public ProcessResult processMigration(EnvironmentInfo info) {
 
         hostList = new ArrayList<>(info.getDatacenter().getHostList());
+        shutdownHosts = new HashMap<>();
         hostCpuMap = hostList.stream().collect(Collectors.toMap(Host::getId, Host::getCpuPercentUtilization));
-        hostVmsMap = hostList.stream().collect(Collectors.toMap(Host::getId, p ->{
+        hostVmsMap = hostList.stream().collect(Collectors.toMap(Host::getId, p -> {
             return new ArrayList<>(p.getVmList());
         }));
         hostMap = hostList.stream().collect(Collectors.toMap(Host::getId, Function.identity()));
@@ -85,6 +84,9 @@ public class ReinforcementLearning implements Migration {
             if (result.isCanDo()) {
                 updateHostAndTargetHost(host, result.getVmsToHosts());
                 updateMigrationMap(result.getVmsToHosts());
+                if (action == 2) {
+                    shutdownHosts.put(host.getId(), host);
+                }
                 act.updateQtable(state, action, result.getReward(), nextState);
             } else {
                 int iterateTimes = 0;
@@ -97,6 +99,9 @@ public class ReinforcementLearning implements Migration {
                     if (result1.isCanDo()) {
                         updateHostAndTargetHost(host, result1.getVmsToHosts());
                         updateMigrationMap(result1.getVmsToHosts());
+                        if (action == 2) {
+                            shutdownHosts.put(host.getId(), host);
+                        }
                         break;
                     }
                     iterateTimes++;
@@ -105,13 +110,17 @@ public class ReinforcementLearning implements Migration {
             }
             totalPower = powerTool.getTotalPower(hostList, hostCpuMap);
         }
-        return vmToHostMap;
+
+        ProcessResult pr = new ProcessResult();
+        pr.setShutdownHosts(shutdownHosts);
+        pr.setVmToHostMap(vmToHostMap);
+        return pr;
     }
 
     private void updateMigrationMap(List<VmToHost> vmsToHosts) {
-        if(vmsToHosts != null && vmsToHosts.size() > 0){
+        if (vmsToHosts != null && vmsToHosts.size() > 0) {
             for (VmToHost vth : vmsToHosts) {
-                vmToHostMap.put(vth.getVm(),vth.getHost());
+                vmToHostMap.put(vth.getVm(), vth.getHost());
             }
         }
     }

@@ -8,7 +8,7 @@ public class Constant {
     /**
      * total hosts
      */
-    public static final int HOSTS = 2;
+    public static final int HOSTS = 5;
     /**
      * total core of single host
      */
@@ -20,15 +20,11 @@ public class Constant {
     /**
      * total internet bandwidth of single host
      */
-    public static final long HOST_BW = 10240; //in Megabits/s
+    public static final long HOST_BW = 102400; //in Megabits/s
     /**
      * total storage of single host
      */
     public static final long HOST_STORAGE = 10240000; //in Megabytes
-    /**
-     * schedul interval
-     */
-    public static final int SCHEDULING_INTERVAL = 10;
     /**
      * Defines the power a Host uses, even if it's idle (in Watts).
      */
@@ -62,8 +58,14 @@ public class Constant {
     /**
      * Each cloudlet execution time
      */
-    public static final int CLOUDLET_LENGTH = 10000;
+    public static final int CLOUDLET_LENGTH = 15000;
 
     public static final int VM_MIPS = 1000;
+
+    public static double SIMULATION_RUNNING_INTERVAL = 1;
+
+    public static final int PRINT_INVERVAL = 1;
+
+    public static final int SEND_MESSAGE_INVERVAL = 2;
 
 }

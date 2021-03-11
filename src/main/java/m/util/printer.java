@@ -1,11 +1,8 @@
 package m.util;
 
-import m.envirnment;
-import org.cloudbus.cloudsim.core.CloudSim;
+import org.cloudbus.cloudsim.datacenters.Datacenter;
 import org.cloudbus.cloudsim.hosts.Host;
-import m.util.Conversion;
 
-import java.util.DoubleSummaryStatistics;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,27 +15,19 @@ public class printer {
 
     static PowerTool powerTool = new PowerTool();
 
-    public void recordPowerConsumption(envirnment envirnment) {
-        CloudSim simulation = envirnment.getSimulation();
-        int time = 1;
-        initialPowerMap(envirnment.getDatacenter().getHostList());
-        while (simulation.isRunning()) {
-            List<Host> hostList = envirnment.getDatacenter().getHostList();
-            for (Host host : hostList) {
-                Map<Integer, Double> hostMap = powerMap.get(host.getId());
-                double power = powerTool.getPower(host, host.getCpuPercentUtilization());
-                hostMap.put(time, power);
-                totalPower += power;
-                System.out.println("time:" + time + "host:" + host.getId() + "isactive: " + host.isActive() + "cpu utilization:" + host.getCpuPercentUtilization() + " power:" + power + " * 1s = " + power);
-            }
-            System.out.println("the total power consumption of the datacenter:" + totalPower);
-            time++;
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+    public void recordPowerConsumption(Datacenter datacenter, int time, int lastTime) {
+        initialPowerMap(datacenter.getHostList());
+        List<Host> hostList = datacenter.getHostList();
+        for (Host host : hostList) {
+            Map<Integer, Double> hostMap = powerMap.get(host.getId());
+            double power = powerTool.getPower(host, host.getCpuPercentUtilization());
+            hostMap.put(time, power);
+            totalPower += power * lastTime;
+            System.out.println("time:" + time + " host:" + host.getId() + " isactive: " + host.isActive() + " cpu utilization:" + host.getCpuPercentUtilization() + " vms:" + host.getVmList().size() + " power:" + power + " * " + lastTime + "s = " + power * lastTime);
         }
+        System.out.println("the total power consumption of the datacenter:" + totalPower);
+        time++;
+
     }
 
     private void initialPowerMap(List<Host> hostList) {
@@ -48,7 +37,6 @@ public class printer {
         }
 
     }
-
 
 
 }

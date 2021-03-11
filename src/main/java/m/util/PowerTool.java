@@ -28,14 +28,10 @@ public class PowerTool {
      * @return
      */
     public double getPower(Host host, double cpuUtilization) {
-        if (host.isActive() && cpuUtilization >= 0) {
+        if (cpuUtilization > 0) {
             return host.getPowerModel().getPower(cpuUtilization);
         } else {
-            if (cpuUtilization > 0) {
-                return host.getPowerModel().getPower(cpuUtilization);
-            } else {
-                return 0.0;
-            }
+            return 0.0;
         }
     }
 }
