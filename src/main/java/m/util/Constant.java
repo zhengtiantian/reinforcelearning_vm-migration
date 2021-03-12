@@ -8,7 +8,7 @@ public class Constant {
     /**
      * total hosts
      */
-    public static final int HOSTS = 5;
+    public static final int HOSTS = 10;
     /**
      * total core of single host
      */
@@ -28,12 +28,12 @@ public class Constant {
     /**
      * Defines the power a Host uses, even if it's idle (in Watts).
      */
-    public static final double HOST_STATIC_POWER = 35;
+    public static final double HOST_STATIC_POWER = 150;
 
     /**
      * The max power a Host uses (in Watts).
      */
-    public static final double HOST_MAX_POWER = 50;
+    public static final double HOST_MAX_POWER = 340;
 
     /**
      * total cores of single vm
@@ -67,6 +67,8 @@ public class Constant {
     public static final int PRINT_INVERVAL = 1;
 
     public static final int SEND_MESSAGE_INVERVAL = 3;
+
+    public static final double PERCENTAGE_OF_ONE_VM_TO_HOST = (double) VM_PES / (double) HOST_PES;
 
     /**
      * reinforcement learning parameters

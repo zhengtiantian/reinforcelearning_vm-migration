@@ -22,10 +22,11 @@ public class printer {
             Map<Integer, Double> hostMap = powerMap.get(host.getId());
             double power = powerTool.getPower(host, host.getCpuPercentUtilization());
             hostMap.put(time, power);
-            counter.addTotalPower(power * lastTime);
-            System.out.println("time:" + time + " host:" + host.getId() + " isactive: " + host.isActive() + " cpu utilization:" + host.getCpuPercentUtilization() + " vms:" + host.getVmList().size() + " power:" + power + " * " + lastTime + "s = " + power * lastTime);
+            double powerConsumption = power * lastTime;
+            counter.addTotalPower(powerConsumption);
+            System.out.println("time:" + time + " host:" + host.getId() + " isactive: " + host.isActive() + " cpu utilization:" + host.getCpuPercentUtilization() + " vms:" + host.getVmList().size() + " power:" + power + "watts * " + lastTime + "s = " + counter.fourDecimalPlaces(powerConsumption / 3600) + "W·h");
         }
-        System.out.println("the total power consumption of the datacenter:" + counter.getTotalPower());
+        System.out.println("the total power consumption of the datacenter:" + counter.getTotalPower() + "W·h");
         time++;
 
     }

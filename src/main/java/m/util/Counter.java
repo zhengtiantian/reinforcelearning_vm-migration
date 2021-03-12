@@ -12,8 +12,8 @@ public class Counter {
         totalPower += power;
     }
 
-    public double getTotalPower() {
-        return totalPower;
+    public String getTotalPower() {
+        return fourDecimalPlaces(totalPower / 3600);
     }
 
     public void addMigrateTime(int times) {
@@ -30,5 +30,9 @@ public class Counter {
 
     public int getIterateTimes() {
         return iterateTimes;
+    }
+
+    public String fourDecimalPlaces(double number) {
+        return String.format("%.4f", number);
     }
 }

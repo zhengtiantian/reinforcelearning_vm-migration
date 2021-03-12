@@ -30,18 +30,20 @@ public abstract class MigrationAction {
         }
         double totalPowerAfterMigrate = totalPower;
         Map.Entry<Long, Double> mostSaving = getMostSavingTargatHost(host, hostCpuMap);
-        totalPowerAfterMigrate -= (powerTool.getPower(host, hostCpuMap.get(host.getId())) - powerTool.getPower(host, hostCpuMap.get(host.getId()) - (constant.VM_PES / constant.HOST_PES)));
-        totalPowerAfterMigrate += (powerTool.getPower(hostMap.get(mostSaving.getKey()), mostSaving.getValue() + (constant.VM_PES / constant.HOST_PES)) - powerTool.getPower(hostMap.get(mostSaving.getKey()), mostSaving.getValue()));
-        if ((mostSaving.getValue() + (constant.VM_PES / constant.HOST_PES)) <= 100
-                && (mostSaving.getValue() + (constant.VM_PES / constant.HOST_PES)) < hostCpuMap.get(host.getId())
+        totalPowerAfterMigrate -= (powerTool.getPower(host, hostCpuMap.get(host.getId())) - powerTool.getPower(host, hostCpuMap.get(host.getId()) - (constant.PERCENTAGE_OF_ONE_VM_TO_HOST)));
+        totalPowerAfterMigrate += (powerTool.getPower(hostMap.get(mostSaving.getKey()), mostSaving.getValue() + (constant.PERCENTAGE_OF_ONE_VM_TO_HOST)) - powerTool.getPower(hostMap.get(mostSaving.getKey()), mostSaving.getValue()));
+        if ((mostSaving.getValue() + (constant.PERCENTAGE_OF_ONE_VM_TO_HOST)) <= 1
+                && (mostSaving.getValue() + ((double) constant.VM_PES / (double) constant.HOST_PES)) < hostCpuMap.get(host.getId())
                 && ((totalPowerAfterMigrate <= totalPower) || hostCpuMap.get(host.getId()) > 70)) {
             List<VmToHost> pairList = new ArrayList<>();
             VmToHost vmToHost = new VmToHost();
             vmToHost.setVm(host.getVmList().get(new Random().nextInt(host.getVmList().size())));
             vmToHost.setHost(hostMap.get(mostSaving.getKey()));
             pairList.add(vmToHost);
-            hostCpuMap.put(host.getId(), hostCpuMap.get(host.getId()) - (constant.VM_PES / constant.HOST_PES));
-            hostCpuMap.put(mostSaving.getKey(), mostSaving.getValue() + (constant.VM_PES / constant.HOST_PES));
+            hostCpuMap.put(host.getId(), hostCpuMap.get(host.getId()) - (constant.PERCENTAGE_OF_ONE_VM_TO_HOST));
+            hostCpuMap.put(mostSaving.getKey(), mostSaving.getValue() + (constant.PERCENTAGE_OF_ONE_VM_TO_HOST));
+
+            System.out.println("action 1...host:" + host.getId() + " cpu utilization:" + hostCpuMap.get(host.getId()));
             return createResult(true, pairList, 50.0);
         }
         return createResult(false, null, -20.0);
@@ -108,14 +110,14 @@ public abstract class MigrationAction {
 
             HostAndCpuUtilization head = minHeap.peek();
 
-            if (head == null || head.getCpuUtilization() >= 100 || head.getCpuUtilization() + (constant.VM_PES / constant.HOST_PES) > 100) {
+            if (head == null || head.getCpuUtilization() + (constant.PERCENTAGE_OF_ONE_VM_TO_HOST) > 1) {
                 hostCpuMap.put(host.getId(), utilization);
                 return createResult(false, null, -10.0);
             }
 
             Host targetHost = hostMap.get(head.getHostId());
             totalPowerAfterMigrate -= powerTool.getPower(targetHost, head.getCpuUtilization());
-            totalPowerAfterMigrate += powerTool.getPower(targetHost, head.getCpuUtilization() + (constant.VM_PES / constant.HOST_PES));
+            totalPowerAfterMigrate += powerTool.getPower(targetHost, head.getCpuUtilization() + (constant.PERCENTAGE_OF_ONE_VM_TO_HOST));
 
             if (totalPowerAfterMigrate >= totalPower) {
                 hostCpuMap.put(host.getId(), utilization);
@@ -127,7 +129,9 @@ public abstract class MigrationAction {
             vmToHost.setHost(targetHost);
             migList.add(vmToHost);
             minHeap.poll();
-            head.setCpuUtilization(head.getCpuUtilization() + (constant.VM_PES / constant.HOST_PES));
+            double newUtilization = head.getCpuUtilization() + (constant.PERCENTAGE_OF_ONE_VM_TO_HOST);
+            head.setCpuUtilization(newUtilization);
+
             minHeap.add(head);
         }
 
