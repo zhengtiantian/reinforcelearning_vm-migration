@@ -50,6 +50,8 @@ public class actuator {
      */
     static double exploration = 0.1;
 
+    public static final int STUDYTIMESWHENFILLED = 3;
+
     /**
      * Initial Q-table
      */

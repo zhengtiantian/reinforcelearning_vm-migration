@@ -5,6 +5,7 @@ import m.migrationAlgorithm.Migration;
 import m.migrationAlgorithm.ReinforcementLearning;
 import m.po.ProcessResult;
 import m.util.Constant;
+import m.util.Counter;
 import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.hosts.Host;
 import org.cloudbus.cloudsim.vms.Vm;
@@ -34,6 +35,8 @@ public class agent {
     private static final CloudSim simulation = envirnment.getSimulation();
 
     private static Constant constant = new Constant();
+
+    private static Counter counter = new Counter();
 
     private static boolean allHostsHaveNoVms = true;
 
@@ -116,7 +119,7 @@ public class agent {
                         }
                     }
 
-//                    processInfo(info);
+                    processInfo(info);
                 } catch (Exception e) {
                     System.out.println("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++" +
                             "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
@@ -131,7 +134,7 @@ public class agent {
 
     private void processInfo(EnvironmentInfo info) {
         ProcessResult pr = migrate.processMigration(info);
-        shutdownHosts(pr.getShutdownHosts());
+//        shutdownHosts(pr.getShutdownHosts());
         migrateVms(pr.getVmToHostMap());
     }
 
@@ -149,6 +152,7 @@ public class agent {
 
     private void migrateVms(Map<Vm, Host> vmHostMap) {
         if (vmHostMap != null && vmHostMap.size() > 0) {
+            counter.addMigrateTime(vmHostMap.size());
             for (Map.Entry<Vm, Host> vm : vmHostMap.entrySet()) {
                 Host host = vm.getValue();
                 if (!host.isActive()) {

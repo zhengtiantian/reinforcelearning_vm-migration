@@ -11,9 +11,9 @@ public class printer {
 
     static Map<Long, Map<Integer, Double>> powerMap = new HashMap<>();
 
-    static double totalPower = 0;
-
     static PowerTool powerTool = new PowerTool();
+
+    private static Counter counter = new Counter();
 
     public void recordPowerConsumption(Datacenter datacenter, int time, int lastTime) {
         initialPowerMap(datacenter.getHostList());
@@ -22,12 +22,20 @@ public class printer {
             Map<Integer, Double> hostMap = powerMap.get(host.getId());
             double power = powerTool.getPower(host, host.getCpuPercentUtilization());
             hostMap.put(time, power);
-            totalPower += power * lastTime;
+            counter.addTotalPower(power * lastTime);
             System.out.println("time:" + time + " host:" + host.getId() + " isactive: " + host.isActive() + " cpu utilization:" + host.getCpuPercentUtilization() + " vms:" + host.getVmList().size() + " power:" + power + " * " + lastTime + "s = " + power * lastTime);
         }
-        System.out.println("the total power consumption of the datacenter:" + totalPower);
+        System.out.println("the total power consumption of the datacenter:" + counter.getTotalPower());
         time++;
 
+    }
+
+    public void printIterateTimes() {
+        System.out.println("Iterate times is :" + counter.getIterateTimes());
+    }
+
+    public void printTotalMigrationTimes() {
+        System.out.println("The total number of vms migration is :" + counter.getTotalVmMigratiomTimes());
     }
 
     private void initialPowerMap(List<Host> hostList) {

@@ -58,7 +58,7 @@ public class Constant {
     /**
      * Each cloudlet execution time
      */
-    public static final int CLOUDLET_LENGTH = 15000;
+    public static final int CLOUDLET_LENGTH = 30000;
 
     public static final int VM_MIPS = 1000;
 
@@ -66,6 +66,11 @@ public class Constant {
 
     public static final int PRINT_INVERVAL = 1;
 
-    public static final int SEND_MESSAGE_INVERVAL = 2;
+    public static final int SEND_MESSAGE_INVERVAL = 3;
+
+    /**
+     * reinforcement learning parameters
+     */
+    public static final double DATACENTER_UTILIZATION_THRESHOLD = 0.6;
 
 }
