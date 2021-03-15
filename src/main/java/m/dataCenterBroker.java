@@ -1,6 +1,7 @@
 package m;
 
 import m.util.Constant;
+import m.util.printer;
 import org.cloudbus.cloudsim.brokers.DatacenterBroker;
 import org.cloudbus.cloudsim.brokers.DatacenterBrokerSimple;
 import org.cloudbus.cloudsim.cloudlets.Cloudlet;
@@ -23,7 +24,9 @@ public class dataCenterBroker {
     private int createsVms;
     private List<Cloudlet> cloudletList;
     private List<Vm> vmList;
+    private Vm lastVm;
     private static DatacenterBroker broker;
+    private static printer printer = new printer();
     private static double CREATEVMSINTERVAL = (constant.CLOUDLET_LENGTH / constant.VM_MIPS)/1.25;
 
     static double[] createVmsRate = new double[]{0.05, 0.1, 0.1, 0.05, 0.25, 0.1, 0.05, 0.05, 0.20, 0.05};
@@ -42,6 +45,8 @@ public class dataCenterBroker {
         for (int i = 0; i < 10; i++) {
             createVmsAndCloudlet((int) (totalVms * createVmsRate[i % 10]), 1, i * CREATEVMSINTERVAL);
         }
+        lastVm = vmList.get(vmList.size() - 1);
+
         return broker;
     }
 
@@ -73,7 +78,11 @@ public class dataCenterBroker {
         Cloudlet cloudlet = info.getCloudlet();
         Vm vm = cloudlet.getVm();
         System.out.println("the vm:" + vm.getId() + " is destorying");
+        if(lastVm.getId() == vm.getId()){
+            printer.printHostsSlaViolation();
+        }
         vm.getHost().destroyVm(vm);
+
     }
 
     /**

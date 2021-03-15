@@ -30,6 +30,7 @@ public class envirnment {
     public void start() {
         datacenter = dataCenter.getDatacenter(simulation);
         broker = dataCenterBroker.getBroker(simulation);
+
         simulation.addOnClockTickListener(this::onClockTickListener);
         simulation.startSync();
     }
@@ -65,22 +66,21 @@ public class envirnment {
     //01/12/2020
     private void onClockTickListener(EventInfo evt) {
 
-
         if (simulation.clock() == previousClock || broker.getVmExecList().isEmpty()) {
             return;
         }
         previousClock = simulation.clock();
 
-        int simulationTime = (int)Math.round(simulation.clock());
+        int simulationTime = (int) Math.round(simulation.clock());
 
         if (simulationTime - previousPrintTime >= constant.PRINT_INVERVAL) {
-            printer.recordPowerConsumption(datacenter, simulationTime,simulationTime - previousPrintTime);
+            printer.recordPowerConsumption(datacenter, simulationTime, simulationTime - previousPrintTime);
             printer.printIterateTimes();
             printer.printTotalMigrationTimes();
             previousPrintTime = simulationTime;
         }
 
-        if(simulationTime - PreviousSendMessageTime >= constant.SEND_MESSAGE_INVERVAL){
+        if (simulationTime - PreviousSendMessageTime >= constant.SEND_MESSAGE_INVERVAL) {
             PreviousSendMessageTime = simulationTime;
             EnvironmentInfo info = new EnvironmentInfo();
             info.setDatacenter(datacenter);

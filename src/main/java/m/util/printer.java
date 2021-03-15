@@ -1,7 +1,11 @@
 package m.util;
 
+import m.dataCenter;
+import m.envirnment;
+import m.po.HostViolationRate;
 import org.cloudbus.cloudsim.datacenters.Datacenter;
 import org.cloudbus.cloudsim.hosts.Host;
+import org.cloudbus.cloudsim.hosts.HostStateHistoryEntry;
 
 import java.util.HashMap;
 import java.util.List;
@@ -15,10 +19,18 @@ public class printer {
 
     private static Counter counter = new Counter();
 
+    private static envirnment envirnment = new envirnment();
+
+
     public void recordPowerConsumption(Datacenter datacenter, int time, int lastTime) {
         initialPowerMap(datacenter.getHostList());
         List<Host> hostList = datacenter.getHostList();
         for (Host host : hostList) {
+            for (HostStateHistoryEntry entry : host.getStateHistory()) {
+                entry.getAllocatedMips();
+                entry.getRequestedMips();
+            }
+
             Map<Integer, Double> hostMap = powerMap.get(host.getId());
             double power = powerTool.getPower(host, host.getCpuPercentUtilization());
             hostMap.put(time, power);
@@ -45,6 +57,15 @@ public class printer {
             powerMap.put(host.getId(), hostMap);
         }
 
+    }
+
+    public void printHostsSlaViolation() {
+        List<Host> hostList = envirnment.getDatacenter().getHostList();
+        System.out.println("sla violation rate accroding to time is:" + counter.getSlaTimePerActiveHost(hostList) + "%");
+        System.out.println("averate sla violation rate is :" + counter.getAverageSlaViotationRate(hostList) + "%");
+        for (HostViolationRate h : counter.getHostViolationRates()) {
+            System.out.println("host:" + h.getHost().getId() + " sla violation rate is " + h.getViolationRate() + "%");
+        }
     }
 
 

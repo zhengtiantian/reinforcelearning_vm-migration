@@ -70,6 +70,7 @@ public class dataCenter {
         host.setRamProvisioner(new ResourceProvisionerSimple());
         host.setBwProvisioner(new ResourceProvisionerSimple());
         host.setIdleShutdownDeadline(0.5);
+        host.enableStateHistory();
         return host;
     }
 

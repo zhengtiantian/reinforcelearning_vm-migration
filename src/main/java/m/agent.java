@@ -119,7 +119,7 @@ public class agent {
                         }
                     }
 
-//                    processInfo(info);
+                    processInfo(info);
                 } catch (Exception e) {
                     System.out.println("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++" +
                             "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
