@@ -1,6 +1,7 @@
 package m;
 
 import ch.qos.logback.classic.Level;
+import m.migrationAlgorithm.GreedyMinMaxHostUtilization;
 import m.migrationAlgorithm.Migration;
 import m.migrationAlgorithm.ReinforcementLearning;
 import m.po.ProcessResult;
@@ -41,6 +42,7 @@ public class agent {
     private static boolean allHostsHaveNoVms = true;
 
     private static Migration migrate = new ReinforcementLearning();
+//    private static Migration migrate = new GreedyMinMaxHostUtilization();
 
     private static ConcurrentLinkedQueue<EnvironmentInfo> queue = envirnment.getQueue();
 
@@ -134,21 +136,10 @@ public class agent {
 
     private void processInfo(EnvironmentInfo info) {
         ProcessResult pr = migrate.processMigration(info);
-//        shutdownHosts(pr.getShutdownHosts());
         migrateVms(pr.getVmToHostMap());
     }
 
-    private void shutdownHosts(Map<Long, Host> shutdownHosts) {
-        if (shutdownHosts != null && shutdownHosts.size() > 0) {
-            for (Map.Entry<Long, Host> e : shutdownHosts.entrySet()) {
-                Host host = e.getValue();
-                if (host.isActive()) {
-                    host.setActive(false);
-                }
-            }
 
-        }
-    }
 
     private void migrateVms(Map<Vm, Host> vmHostMap) {
         if (vmHostMap != null && vmHostMap.size() > 0) {

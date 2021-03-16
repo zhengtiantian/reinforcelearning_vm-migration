@@ -77,6 +77,7 @@ public class envirnment {
             printer.recordPowerConsumption(datacenter, simulationTime, simulationTime - previousPrintTime);
             printer.printIterateTimes();
             printer.printTotalMigrationTimes();
+            printer.printHostsSlaViolation();
             previousPrintTime = simulationTime;
         }
 
@@ -87,6 +88,7 @@ public class envirnment {
             info.setBroker(broker);
             queue.offer(info);
         }
+
 
     }
 

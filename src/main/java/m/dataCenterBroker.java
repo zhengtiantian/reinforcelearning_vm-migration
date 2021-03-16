@@ -24,7 +24,6 @@ public class dataCenterBroker {
     private int createsVms;
     private List<Cloudlet> cloudletList;
     private List<Vm> vmList;
-    private Vm lastVm;
     private static DatacenterBroker broker;
     private static printer printer = new printer();
     private static double CREATEVMSINTERVAL = (constant.CLOUDLET_LENGTH / constant.VM_MIPS)/1.25;
@@ -45,7 +44,6 @@ public class dataCenterBroker {
         for (int i = 0; i < 10; i++) {
             createVmsAndCloudlet((int) (totalVms * createVmsRate[i % 10]), 1, i * CREATEVMSINTERVAL);
         }
-        lastVm = vmList.get(vmList.size() - 1);
 
         return broker;
     }
@@ -77,12 +75,7 @@ public class dataCenterBroker {
     private void cloudletProcessingUpdateListener(CloudletVmEventInfo info) {
         Cloudlet cloudlet = info.getCloudlet();
         Vm vm = cloudlet.getVm();
-        System.out.println("the vm:" + vm.getId() + " is destorying");
-        if(lastVm.getId() == vm.getId()){
-            printer.printHostsSlaViolation();
-        }
         vm.getHost().destroyVm(vm);
-
     }
 
     /**

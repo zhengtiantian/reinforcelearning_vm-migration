@@ -74,7 +74,7 @@ public class Counter {
         return fourDecimalPlaces((slaViolationTimePerHost / totalTime) * 100);
     }
 
-    public static List<HostViolationRate> hostViolationRates = new ArrayList<>();
+    public static List<HostViolationRate> hostViolationRates;
 
     public List<HostViolationRate> getHostViolationRates() {
 
@@ -82,7 +82,7 @@ public class Counter {
     }
 
     public String getAverageSlaViotationRate(List<Host> hosts) {
-
+        hostViolationRates = new ArrayList<>();
         double totalAllocatedMips = 0;
         double totalRequestedMips = 0;
 
