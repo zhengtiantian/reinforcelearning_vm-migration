@@ -1,6 +1,6 @@
 package m.migrationAlgorithm;
 
-import m.actuator;
+import m.algorithmTool.reinforcementLearning.QTable;
 import m.po.*;
 import m.util.Constant;
 import m.util.Counter;
@@ -17,7 +17,7 @@ public class ReinforcementLearning extends MigrationTool implements Migration {
     /**
      * get the implement of m.migrationAlgorithm.actuator
      */
-    private static actuator act = new actuator();
+    private static QTable act = new QTable();
 
     private static PowerTool powerTool = new PowerTool();
 
@@ -102,8 +102,6 @@ public class ReinforcementLearning extends MigrationTool implements Migration {
     }
 
 
-
-
     /**
      * Determine whether the given action from the Q table is the best action
      *
@@ -135,9 +133,6 @@ public class ReinforcementLearning extends MigrationTool implements Migration {
         }
         return createResult(false, null, 0.0);
     }
-
-
-
 
 
     /**
@@ -212,14 +207,9 @@ public class ReinforcementLearning extends MigrationTool implements Migration {
         }
         double utilization = hostCpuMap.get(host.getId());
         hostCpuMap.remove(host.getId());
-        double sumFreeUt = 0.0;
-        for (Map.Entry<Long, Double> e : hostCpuMap.entrySet()) {
-            if (e.getValue() == 0) {
-                continue;
-            }
-            sumFreeUt += (100 - e.getValue());
-        }
-        if (utilization > sumFreeUt) {
+        Map<Long, Double> hostCpuMapWithoutZero = removeAllZeroHosts(hostCpuMap);
+        boolean isEnough = haveEnoughSpace(utilization, host, hostCpuMapWithoutZero);
+        if (!isEnough) {
             hostCpuMap.put(host.getId(), host.getCpuPercentUtilization());
             return createResult(false, null, -10.0);
         }

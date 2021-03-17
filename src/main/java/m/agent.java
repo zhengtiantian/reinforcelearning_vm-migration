@@ -1,7 +1,8 @@
 package m;
 
 import ch.qos.logback.classic.Level;
-import m.migrationAlgorithm.GreedyMinMaxHostUtilization;
+import m.algorithmTool.reinforcementLearning.QTable;
+import m.migrationAlgorithm.AntColonyOptimization;
 import m.migrationAlgorithm.Migration;
 import m.migrationAlgorithm.ReinforcementLearning;
 import m.po.ProcessResult;
@@ -41,7 +42,8 @@ public class agent {
 
     private static boolean allHostsHaveNoVms = true;
 
-    private static Migration migrate = new ReinforcementLearning();
+//    private static Migration migrate = new ReinforcementLearning();
+    private static Migration migrate = new AntColonyOptimization();
 //    private static Migration migrate = new GreedyMinMaxHostUtilization();
 
     private static ConcurrentLinkedQueue<EnvironmentInfo> queue = envirnment.getQueue();
@@ -91,7 +93,7 @@ public class agent {
     public void startSimulation() {
         try {
             envirnment.start();
-            actuator.iniQtable();
+            QTable.iniQtable();
             while (simulation.isRunning()) {
                 simulation.runFor(constant.SIMULATION_RUNNING_INTERVAL);
                 waitSomeMillis((long)constant.SIMULATION_RUNNING_INTERVAL*1000);

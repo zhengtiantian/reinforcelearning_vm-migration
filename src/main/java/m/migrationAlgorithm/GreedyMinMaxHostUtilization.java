@@ -23,8 +23,6 @@ public class GreedyMinMaxHostUtilization extends MigrationTool implements Migrat
 
     private static Map<Long, List<Vm>> hostVmsMap;
 
-    private static Map<Long, Host> hostMap;
-
     private static Map<Vm, Host> vmToHostMap;
 
     private double MAX_CPU_UTILIZATION_THERSHOLD = 0.8;
@@ -38,7 +36,6 @@ public class GreedyMinMaxHostUtilization extends MigrationTool implements Migrat
         hostVmsMap = hostList.stream().collect(Collectors.toMap(Host::getId, p -> {
             return new ArrayList<>(p.getVmList());
         }));
-        hostMap = hostList.stream().collect(Collectors.toMap(Host::getId, Function.identity()));
         vmToHostMap = new HashMap<>();
         sortHostByIncreasingCpuUtilization(hostList);
 

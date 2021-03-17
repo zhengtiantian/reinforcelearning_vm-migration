@@ -1,11 +1,11 @@
-package m;
+package m.algorithmTool.reinforcementLearning;
 
 import java.util.Random;
 
 /**
  * @author zxy18
  */
-public class actuator {
+public class QTable {
 
 
     /**
