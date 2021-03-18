@@ -2,12 +2,12 @@ package m.algorithmTool.antColonyOptimization;
 
 import m.po.Position;
 import m.util.Constant;
-import org.cloudbus.cloudsim.cloudlets.Cloudlet;
 import org.cloudbus.cloudsim.hosts.Host;
 import org.cloudbus.cloudsim.vms.Vm;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 /**
  * 蚂蚁类
@@ -41,7 +41,8 @@ public class Ant {
 
         //随机选择蚂蚁的位置
         int firstHost = (int) (hostList.size() * Math.random());
-        int firstVm = (int) (vmList.size() * Math.random());
+        Random r = new Random();
+        int firstVm = (int) (vmList.get(r.nextInt(vmList.size())).getId());
         tour.add(new Position(firstHost, firstVm));
         tabu.add(new Integer(firstVm));
         host_vm[firstHost] += constant.CLOUDLET_LENGTH;
@@ -52,7 +53,10 @@ public class Ant {
      */
     public double Dij(int host, int vm) {
         double d;
-        d = host_vm[host] / vmList.get(vm).getMips() + constant.CLOUDLET_LENGTH / hostList.get(host).getBw().getCapacity();
+        double hv = host_vm[host];
+        double vmMips = vmList.get(vm).getMips();
+        double capacity = hostList.get(host).getBw().getCapacity();
+        d = hv / vmMips + (double)constant.CLOUDLET_LENGTH / capacity;
         return d;
     }
 
@@ -73,7 +77,10 @@ public class Ant {
                 if (tabu.contains(new Integer(j))) {
                     continue;
                 }
-                sum += Math.pow(pheromone[i][j], alpha) * Math.pow(1 / Dij(i, j), beta);
+                double pow = Math.pow(pheromone[i][j], alpha);
+                double dij = Dij(i, j);
+                double pow1 = Math.pow(1 / dij, beta);
+                sum +=  pow * pow1;
             }
         }
         //计算每个节点被选的概率
@@ -106,8 +113,8 @@ public class Ant {
             System.out.println("选择下一个虚拟机没有成功！");
         }
         tabu.add(new Integer(selectVm));
-        tour.add(new Position(selectHost, selectVm));
-        host_vm[selectHost] += constant.PERCENTAGE_OF_ONE_VM_TO_HOST;
+        tour.add(new Position(selectHost, (int)vmList.get(selectVm).getId()));
+        host_vm[selectHost] += constant.CLOUDLET_LENGTH;
     }
 
 
@@ -116,7 +123,8 @@ public class Ant {
         double[] max;
         max = new double[hostList.size()];
         for (int i = 0; i < tour.size(); i++) {
-            max[tour.get(i).getHostId()] += constant.PERCENTAGE_OF_ONE_VM_TO_HOST / hostList.get(tour.get(i).getHostId()).getMips();
+            double mips = hostList.get(tour.get(i).getHostId()).getMips();
+            max[tour.get(i).getHostId()] += (double)constant.CLOUDLET_LENGTH / mips;
         }
         tourLength = max[0];
         for (int i = 0; i < hostList.size(); i++) {

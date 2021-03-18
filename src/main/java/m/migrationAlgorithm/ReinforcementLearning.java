@@ -208,7 +208,7 @@ public class ReinforcementLearning extends MigrationTool implements Migration {
         double utilization = hostCpuMap.get(host.getId());
         hostCpuMap.remove(host.getId());
         Map<Long, Double> hostCpuMapWithoutZero = removeAllZeroHosts(hostCpuMap);
-        boolean isEnough = haveEnoughSpace(utilization, host, hostCpuMapWithoutZero);
+        boolean isEnough = haveEnoughSpace(utilization, host, hostCpuMapWithoutZero, 0);
         if (!isEnough) {
             hostCpuMap.put(host.getId(), host.getCpuPercentUtilization());
             return createResult(false, null, -10.0);

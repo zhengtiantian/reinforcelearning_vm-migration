@@ -64,8 +64,8 @@ public abstract class MigrationTool {
     }
 
 
-    public boolean haveEnoughSpace(Double utilization, Host host, Map<Long, Double> hostCpuMap) {
-        double sumFreeUt = 0.0;
+    public boolean haveEnoughSpace(Double utilization, Host host, Map<Long, Double> hostCpuMap, int unassignmentVms) {
+        double sumFreeUt = unassignmentVms * constant.PERCENTAGE_OF_ONE_VM_TO_HOST;
         for (Map.Entry<Long, Double> e : hostCpuMap.entrySet()) {
             if (e.getKey() == host.getId()) {
                 continue;
@@ -160,5 +160,16 @@ public abstract class MigrationTool {
             }
         }
         return vmMap;
+    }
+
+    public double calculateAverageDatacenterUsed(Map<Long, Double> hostCpuMapWithoutZero, int unassignmentVms) {
+        double rate = unassignmentVms * constant.PERCENTAGE_OF_ONE_VM_TO_HOST;
+        if (hostCpuMapWithoutZero != null && hostCpuMapWithoutZero.size() > 0) {
+            for (Map.Entry<Long, Double> e : hostCpuMapWithoutZero.entrySet()) {
+                rate += e.getValue();
+            }
+
+        }
+        return rate / hostCpuMapWithoutZero.size();
     }
 }

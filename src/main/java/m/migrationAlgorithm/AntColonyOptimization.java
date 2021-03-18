@@ -4,8 +4,6 @@ import m.algorithmTool.antColonyOptimization.Ant;
 import m.po.EnvironmentInfo;
 import m.po.Position;
 import m.po.ProcessResult;
-import m.util.Constant;
-import org.cloudbus.cloudsim.cloudlets.Cloudlet;
 import org.cloudbus.cloudsim.hosts.Host;
 import org.cloudbus.cloudsim.vms.Vm;
 
@@ -82,9 +80,12 @@ public class AntColonyOptimization extends MigrationTool implements Migration {
                 tryMoveOutVms(host);
             }
         }
-        init();
-        run();
-        getResult();
+
+        if(moveOutVms.size()>0 && moveInHosts.size()>0){
+            init();
+            run();
+            getResult();
+        }
 
         ProcessResult pr = new ProcessResult();
         pr.setVmToHostMap(vmToHostMap);
@@ -94,12 +95,12 @@ public class AntColonyOptimization extends MigrationTool implements Migration {
 
     private void tryMoveOutVms(Host host) {
 //        calculate how many vms should move out
-        int vmsNum = calculateVmsMoveout(hostCpuMap.get(host), MAX_CPU_UTILIZATION_THERSHOLD);
+        int vmsNum = calculateVmsMoveout(hostCpuMap.get(host.getId()), MAX_CPU_UTILIZATION_THERSHOLD);
         if (vmsNum == 0) {
             return;
         }
         Map<Long, Double> hostCpuMapWithoutZero = removeAllZeroHosts(hostCpuMap);
-        boolean isEnough = haveEnoughSpace(vmsNum * constant.PERCENTAGE_OF_ONE_VM_TO_HOST, host, hostCpuMapWithoutZero);
+        boolean isEnough = haveEnoughSpace(vmsNum * constant.PERCENTAGE_OF_ONE_VM_TO_HOST, host, hostCpuMapWithoutZero, moveOutVms.size());
         if (isEnough) {
             moveOutVmsFromHost(vmsNum, moveOutVms, host, hostVmsMap);
         } else {
@@ -109,7 +110,7 @@ public class AntColonyOptimization extends MigrationTool implements Migration {
                     hostCpuMapWithoutZero.put(e.getKey(), hostCpuMap.get(e.getKey()));
                     moveInHosts.put(e.getKey(), e.getValue());
                     removeFromZeroMapHosts.add(e.getKey());
-                    boolean isEnough2 = haveEnoughSpace(vmsNum * constant.PERCENTAGE_OF_ONE_VM_TO_HOST, host, hostCpuMapWithoutZero);
+                    boolean isEnough2 = haveEnoughSpace(vmsNum * constant.PERCENTAGE_OF_ONE_VM_TO_HOST, host, hostCpuMapWithoutZero, moveOutVms.size());
                     if (isEnough2) {
                         moveOutVmsFromHost(vmsNum, moveOutVms, host, hostVmsMap);
                         updateAllZeroHostMap(removeFromZeroMapHosts, allZeroHostMap);
@@ -123,12 +124,17 @@ public class AntColonyOptimization extends MigrationTool implements Migration {
 
     private boolean tryShotdown(Host host) {
         Map<Long, Double> hostCpuMapWithoutZero = removeAllZeroHosts(hostCpuMap);
-        boolean isEnough = haveEnoughSpace(hostCpuMap.get(host.getId()), host, hostCpuMapWithoutZero);
+        double rate = calculateAverageDatacenterUsed(hostCpuMapWithoutZero, moveOutVms.size());
+        if (rate > 0.6) {
+            return false;
+        }
+        boolean isEnough = haveEnoughSpace(hostCpuMap.get(host.getId()), host, hostCpuMapWithoutZero, moveOutVms.size());
         if (isEnough) {
             List<Vm> vms = hostVmsMap.get(host.getId());
             addAllVms(moveOutVms, vms);
             moveInHosts.remove(host.getId());
             allZeroHostMap.put(host.getId(), host);
+            hostCpuMap.put(host.getId(), 0.0);
         }
         return isEnough;
     }
@@ -233,7 +239,11 @@ public class AntColonyOptimization extends MigrationTool implements Migration {
         System.out.println("最优路径长度是" + bestLength);
         for (int j = 0; j < moveOutVms.size(); j++) {
             System.out.println(bestTour[j].getVmId() + "分配给：" + bestTour[j].getHostId());
-            vmToHostMap.put(vmMap.get(bestTour[j].getVmId()), hostMap.get(bestTour[j].getHostId()));
+            int vmId = bestTour[j].getVmId();
+            Vm vm = vmMap.get((long)vmId);
+            int hostId = bestTour[j].getHostId();
+            Host host = hostMap.get((long)hostId);
+            vmToHostMap.put(vm, host);
         }
     }
 

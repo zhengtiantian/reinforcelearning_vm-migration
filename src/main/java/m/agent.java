@@ -42,7 +42,7 @@ public class agent {
 
     private static boolean allHostsHaveNoVms = true;
 
-//    private static Migration migrate = new ReinforcementLearning();
+    //    private static Migration migrate = new ReinforcementLearning();
     private static Migration migrate = new AntColonyOptimization();
 //    private static Migration migrate = new GreedyMinMaxHostUtilization();
 
@@ -69,7 +69,7 @@ public class agent {
                     agent.startSimulation();
                 }
             });
-            waitSomeMillis((long)constant.SIMULATION_RUNNING_INTERVAL*1000);
+            waitSomeMillis((long) constant.SIMULATION_RUNNING_INTERVAL * 1000);
             // create a thread to get cpu and ram from HOST and VM
             ex.submit(new Runnable() {
                 @Override
@@ -86,7 +86,6 @@ public class agent {
     }
 
 
-
     /**
      * start simulation and get the information from the environment each second then put the information into the queue.
      */
@@ -96,7 +95,7 @@ public class agent {
             QTable.iniQtable();
             while (simulation.isRunning()) {
                 simulation.runFor(constant.SIMULATION_RUNNING_INTERVAL);
-                waitSomeMillis((long)constant.SIMULATION_RUNNING_INTERVAL*1000);
+                waitSomeMillis((long) constant.SIMULATION_RUNNING_INTERVAL * 1000);
             }
         } catch (Exception e) {
             System.out.println("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++" +
@@ -105,7 +104,6 @@ public class agent {
         }
 
     }
-
 
 
     /**
@@ -142,16 +140,16 @@ public class agent {
     }
 
 
-
     private void migrateVms(Map<Vm, Host> vmHostMap) {
         if (vmHostMap != null && vmHostMap.size() > 0) {
             counter.addMigrateTime(vmHostMap.size());
-            for (Map.Entry<Vm, Host> vm : vmHostMap.entrySet()) {
-                Host host = vm.getValue();
-                if (!host.isActive()) {
-                    host.setActive(true);
+            for (Map.Entry<Vm, Host> e : vmHostMap.entrySet()) {
+                Vm vm = e.getKey();
+                Host host = e.getValue();
+                if (vm == null || host == null) {
+                    continue;
                 }
-                envirnment.getDatacenter().requestVmMigration(vm.getKey(), vm.getValue());
+                envirnment.getDatacenter().requestVmMigration(vm, host);
             }
         }
     }
