@@ -40,14 +40,14 @@ public class AntColonyOptimization extends MigrationTool implements Migration {
 
     private int antNum = 5;
 
-    private List<Ant> ants;//定义蚂蚁群
+    private List<Ant> ants;
 
     private static int Q = 100;
     private static int maxgen = 10;
-    private double[][] pheromone;//信息素矩阵
-    private double[][] Delta;//总的信息素增量
-    public Position[] bestTour;//最佳解
-    private double bestLength;//最优解的长度（时间的大小）
+    private double[][] pheromone;//pheromone matrix
+    private double[][] Delta;//Delta matrix
+    public Position[] bestTour;//best solution
+    private double bestLength;
     List<Host> moveInHostList;
     List<Vm> moveOutVmList;
 
@@ -141,7 +141,7 @@ public class AntColonyOptimization extends MigrationTool implements Migration {
 
 
     /**
-     * 初始化矩阵
+     * init all ant colony algorithm parameters
      *
      * @param
      */
@@ -153,7 +153,6 @@ public class AntColonyOptimization extends MigrationTool implements Migration {
         pheromone = new double[moveInHosts.size()][moveOutVms.size()];
         Delta = new double[moveInHosts.size()][moveOutVms.size()];
         bestLength = 1000000;
-        //初始化信息素矩阵
         for (int i = 0; i < moveInHosts.size(); i++) {
             for (int j = 0; j < moveOutVms.size(); j++) {
                 pheromone[i][j] = 0.1;
@@ -163,7 +162,6 @@ public class AntColonyOptimization extends MigrationTool implements Migration {
         for (int i = 0; i < moveOutVms.size(); i++) {
             bestTour[i] = new Position(-1, -1);
         }
-        //随机放置蚂蚁
         for (int i = 0; i < antNum; i++) {
             ants.add(new Ant());
             ants.get(i).RandomSelectVM(moveInHostList, moveOutVmList);
@@ -171,31 +169,29 @@ public class AntColonyOptimization extends MigrationTool implements Migration {
     }
 
     /**
-     * ACO的运行过程
+     * the process of the ant colony optimization algorithm
      */
     public void run() {
         for (int runTime = 0; runTime < maxgen; runTime++) {
-            System.out.println("第" + runTime + "次：");
-            //每只蚂蚁移动的过程
             for (int i = 0; i < antNum; i++) {
                 for (int j = 1; j < moveOutVms.size(); j++) {
                     ants.get(i).SelectNextVM(pheromone);
                 }
             }
             for (int i = 0; i < antNum; i++) {
-                System.out.println("第" + i + "只蚂蚁");
+                System.out.println("number " + i + " ant");
                 ants.get(i).CalTourLength();
-                System.out.println("第" + i + "只蚂蚁的路程：" + ants.get(i).tourLength);
+                System.out.println("number" + i + "ant's path：" + ants.get(i).tourLength);
                 ants.get(i).CalDelta();
                 if (ants.get(i).tourLength < bestLength) {
-                    //保留最优路径
+                    //record best path
                     bestLength = ants.get(i).tourLength;
-                    System.out.println("第" + runTime + "代" + "第" + i + "只蚂蚁发现新的解：" + bestLength);
+                    System.out.println(runTime + "times iteration," + "number " + i + "ant discovers new solution：" + bestLength);
                     for (int j = 0; j < moveOutVms.size(); j++) {
                         bestTour[j].setHostId(ants.get(i).tour.get(j).getHostId());
                         bestTour[j].setVmId(ants.get(i).tour.get(j).getVmId());
                     }
-                    //对发现最优解的路更新信息素
+                    //update pheromone
                     for (int k = 0; k < moveInHosts.size(); k++) {
                         for (int j = 0; j < moveOutVms.size(); j++) {
                             pheromone[k][j] = pheromone[k][j] + Q / bestLength;
@@ -203,9 +199,8 @@ public class AntColonyOptimization extends MigrationTool implements Migration {
                     }
                 }
             }
-            UpdatePheromone();//对每条路更新信息素
+            UpdatePheromone();//update pheromone
 
-            //重新随机设置蚂蚁
             for (int i = 0; i < antNum; i++) {
                 ants.get(i).RandomSelectVM(moveInHostList, moveOutVmList);
             }
@@ -213,7 +208,7 @@ public class AntColonyOptimization extends MigrationTool implements Migration {
     }
 
     /**
-     * 更新信息素矩阵
+     * updatePheromone
      */
     public void UpdatePheromone() {
         double rou = 0.5;
@@ -233,12 +228,11 @@ public class AntColonyOptimization extends MigrationTool implements Migration {
     }
 
     /**
-     * 输出程序运行结果
+     * print result
      */
     public void getResult() {
-        System.out.println("最优路径长度是" + bestLength);
+        System.out.println("the length of best path is" + bestLength);
         for (int j = 0; j < moveOutVms.size(); j++) {
-            System.out.println(bestTour[j].getVmId() + "分配给：" + bestTour[j].getHostId());
             int vmId = bestTour[j].getVmId();
             Vm vm = vmMap.get((long)vmId);
             int hostId = bestTour[j].getHostId();
