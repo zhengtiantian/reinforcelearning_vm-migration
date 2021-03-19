@@ -75,9 +75,9 @@ public class envirnment {
 
         if (simulationTime - previousPrintTime >= constant.PRINT_INVERVAL) {
             printer.recordPowerConsumption(datacenter, simulationTime, simulationTime - previousPrintTime);
-            printer.printIterateTimes();
+//            printer.printIterateTimes();
             printer.printTotalMigrationRequestTimes();
-            printer.printTotalMigrationFinishedTimes();
+//            printer.printTotalMigrationFinishedTimes();
             printer.printHostsSlaViolation();
             printer.printTotalTime();
             previousPrintTime = simulationTime;

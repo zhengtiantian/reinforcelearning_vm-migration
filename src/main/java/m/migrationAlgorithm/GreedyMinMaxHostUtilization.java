@@ -7,7 +7,6 @@ import org.cloudbus.cloudsim.hosts.Host;
 import org.cloudbus.cloudsim.vms.Vm;
 
 import java.util.*;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 
@@ -25,9 +24,9 @@ public class GreedyMinMaxHostUtilization extends MigrationTool implements Migrat
 
     private static Map<Vm, Host> vmToHostMap;
 
-    private double MAX_CPU_UTILIZATION_THERSHOLD = 0.7;
+    private double MAX_CPU_UTILIZATION_THERSHOLD = 0.8;
 
-    private double MIX_CPU_UTILIZATION_THERSHOLD = 0.3;
+    private double MIX_CPU_UTILIZATION_THERSHOLD = 0.4;
 
     @Override
     public ProcessResult processMigration(EnvironmentInfo info) {

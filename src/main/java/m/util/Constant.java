@@ -8,7 +8,7 @@ public class Constant {
     /**
      * total hosts
      */
-    public static final int HOSTS = 10;
+    public static final int HOSTS = 20;
     /**
      * total core of single host
      */
@@ -70,9 +70,6 @@ public class Constant {
 
     public static final double PERCENTAGE_OF_ONE_VM_TO_HOST = (double) VM_PES / (double) HOST_PES;
 
-    /**
-     * reinforcement learning parameters
-     */
-    public static final double DATACENTER_UTILIZATION_THRESHOLD = 0.6;
+
 
 }

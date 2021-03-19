@@ -41,8 +41,8 @@ public class agent {
 
     private static boolean allHostsHaveNoVms = true;
 
-//    private static Migration migrate = new ReinforcementLearning();
-    private static Migration migrate = new GreedyMinMaxHostUtilization();
+    private static Migration migrate = new ReinforcementLearning();
+//    private static Migration migrate = new GreedyMinMaxHostUtilization();
 //    private static Migration migrate = new AntColonyOptimization();
 
 

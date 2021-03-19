@@ -41,6 +41,10 @@ public class ReinforcementLearning extends MigrationTool implements Migration {
 
     private static double totalPower;
 
+    private double MAX_CPU_UTILIZATION_THERSHOLD = 0.8;
+
+    public static final double DATACENTER_UTILIZATION_THRESHOLD = 0.7;
+
     @Override
     public ProcessResult processMigration(EnvironmentInfo info) {
         long startTime = System.nanoTime();
@@ -147,7 +151,7 @@ public class ReinforcementLearning extends MigrationTool implements Migration {
      */
     ExpectedResult canDoAction1(Host host, Map<Long, Double> hostCpuMap, Map<Long, Host> hostMap, double totalPower) {
         boolean theLeastUsed = istheleastUsedHost(host, hostCpuMap);
-        if (theLeastUsed && hostCpuMap.get(host.getId()) < 70) {
+        if (theLeastUsed && hostCpuMap.get(host.getId()) < MAX_CPU_UTILIZATION_THERSHOLD) {
             return createResult(true, null, 0.0);
         }
         double totalPowerAfterMigrate = totalPower;
@@ -156,7 +160,7 @@ public class ReinforcementLearning extends MigrationTool implements Migration {
         totalPowerAfterMigrate += (powerTool.getPower(hostMap.get(mostSaving.getKey()), mostSaving.getValue() + (constant.PERCENTAGE_OF_ONE_VM_TO_HOST)) - powerTool.getPower(hostMap.get(mostSaving.getKey()), mostSaving.getValue()));
         if ((mostSaving.getValue() + (constant.PERCENTAGE_OF_ONE_VM_TO_HOST)) <= 1
                 && (mostSaving.getValue() + ((double) constant.VM_PES / (double) constant.HOST_PES)) < hostCpuMap.get(host.getId())
-                && ((totalPowerAfterMigrate <= totalPower) || hostCpuMap.get(host.getId()) > 70)) {
+                && ((totalPowerAfterMigrate <= totalPower) || hostCpuMap.get(host.getId()) > MAX_CPU_UTILIZATION_THERSHOLD)) {
             List<VmToHost> pairList = new ArrayList<>();
             VmToHost vmToHost = new VmToHost();
             vmToHost.setVm(host.getVmList().get(new Random().nextInt(host.getVmList().size())));
@@ -205,7 +209,7 @@ public class ReinforcementLearning extends MigrationTool implements Migration {
     ExpectedResult canDoAction2(Host host, Map<Long, Double> hostCpuMap, Map<Long, List<Vm>> hostVmsMap, Map<Long, Host> hostMap, double totalPower) {
 
         double rate = dataCenterUtilization(hostCpuMap);
-        if (rate >= constant.DATACENTER_UTILIZATION_THRESHOLD) {
+        if (rate >= DATACENTER_UTILIZATION_THRESHOLD) {
             return createResult(true, null, 0.0);
         }
         double utilization = hostCpuMap.get(host.getId());

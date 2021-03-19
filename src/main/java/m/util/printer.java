@@ -52,7 +52,7 @@ public class printer {
     }
 
     public void printTotalMigrationRequestTimes() {
-        System.out.println("The total number of request migration vms migration is :" + counter.getTotalVmMigratioRequestTimes());
+        System.out.println("The total number of vms migration is :" + counter.getTotalVmMigratioRequestTimes());
     }
 
     private void initialPowerMap(List<Host> hostList) {
@@ -67,9 +67,9 @@ public class printer {
         List<Host> hostList = envirnment.getDatacenter().getHostList();
         System.out.println("sla violation rate accroding to time is:" + counter.getSlaTimePerActiveHost(hostList) + "%");
         System.out.println("averate sla violation rate is :" + counter.getAverageSlaViotationRate(hostList) + "%");
-        for (HostViolationRate h : counter.getHostViolationRates()) {
-            System.out.println("host:" + h.getHost().getId() + " sla violation rate is " + h.getViolationRate() + "%");
-        }
+//        for (HostViolationRate h : counter.getHostViolationRates()) {
+//            System.out.println("host:" + h.getHost().getId() + " sla violation rate is " + h.getViolationRate() + "%");
+//        }
     }
 
     public void printTotalTime() {
