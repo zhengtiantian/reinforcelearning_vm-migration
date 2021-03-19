@@ -43,7 +43,7 @@ public class ReinforcementLearning extends MigrationTool implements Migration {
 
     @Override
     public ProcessResult processMigration(EnvironmentInfo info) {
-
+        long startTime = System.nanoTime();
         hostList = new ArrayList<>(info.getDatacenter().getHostList());
         shutdownHosts = new HashMap<>();
         hostCpuMap = hostList.stream().collect(Collectors.toMap(Host::getId, Host::getCpuPercentUtilization));
@@ -95,6 +95,9 @@ public class ReinforcementLearning extends MigrationTool implements Migration {
             totalPower = powerTool.getTotalPower(hostList, hostCpuMap);
         }
 
+        long endTime = System.nanoTime();
+        long diff = endTime - startTime;
+        counter.addTime(diff);
         ProcessResult pr = new ProcessResult();
         pr.setShutdownHosts(shutdownHosts);
         pr.setVmToHostMap(vmToHostMap);

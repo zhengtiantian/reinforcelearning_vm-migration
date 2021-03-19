@@ -25,12 +25,13 @@ public class GreedyMinMaxHostUtilization extends MigrationTool implements Migrat
 
     private static Map<Vm, Host> vmToHostMap;
 
-    private double MAX_CPU_UTILIZATION_THERSHOLD = 0.8;
+    private double MAX_CPU_UTILIZATION_THERSHOLD = 0.7;
 
-    private double MIX_CPU_UTILIZATION_THERSHOLD = 0.2;
+    private double MIX_CPU_UTILIZATION_THERSHOLD = 0.3;
 
     @Override
     public ProcessResult processMigration(EnvironmentInfo info) {
+        long startTime = System.nanoTime();
         hostList = new ArrayList<>(info.getDatacenter().getHostList());
         hostCpuMap = hostList.stream().collect(Collectors.toMap(Host::getId, Host::getCpuPercentUtilization));
         hostVmsMap = hostList.stream().collect(Collectors.toMap(Host::getId, p -> {
@@ -64,7 +65,8 @@ public class GreedyMinMaxHostUtilization extends MigrationTool implements Migrat
             }
             System.out.println();
         }
-
+        long endTime = System.nanoTime();
+        counter.addTime(endTime - startTime);
         ProcessResult pr = new ProcessResult();
         pr.setVmToHostMap(vmToHostMap);
         return pr;

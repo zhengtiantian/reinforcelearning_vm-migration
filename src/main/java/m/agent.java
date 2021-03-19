@@ -3,6 +3,7 @@ package m;
 import ch.qos.logback.classic.Level;
 import m.algorithmTool.reinforcementLearning.QTable;
 import m.migrationAlgorithm.AntColonyOptimization;
+import m.migrationAlgorithm.GreedyMinMaxHostUtilization;
 import m.migrationAlgorithm.Migration;
 import m.migrationAlgorithm.ReinforcementLearning;
 import m.po.ProcessResult;
@@ -38,13 +39,12 @@ public class agent {
 
     private static Constant constant = new Constant();
 
-    private static Counter counter = new Counter();
-
     private static boolean allHostsHaveNoVms = true;
 
-    //    private static Migration migrate = new ReinforcementLearning();
-    private static Migration migrate = new AntColonyOptimization();
-//    private static Migration migrate = new GreedyMinMaxHostUtilization();
+//    private static Migration migrate = new ReinforcementLearning();
+    private static Migration migrate = new GreedyMinMaxHostUtilization();
+//    private static Migration migrate = new AntColonyOptimization();
+
 
     private static ConcurrentLinkedQueue<EnvironmentInfo> queue = envirnment.getQueue();
 
@@ -142,7 +142,6 @@ public class agent {
 
     private void migrateVms(Map<Vm, Host> vmHostMap) {
         if (vmHostMap != null && vmHostMap.size() > 0) {
-            counter.addMigrateTime(vmHostMap.size());
             for (Map.Entry<Vm, Host> e : vmHostMap.entrySet()) {
                 Vm vm = e.getKey();
                 Host host = e.getValue();

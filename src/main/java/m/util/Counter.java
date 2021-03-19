@@ -6,12 +6,17 @@ import org.cloudbus.cloudsim.hosts.HostStateHistoryEntry;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class Counter {
 
     private static int iterateTimes = 0;
 
-    private static int totalVmMigrateTimes = 0;
+    private static long totalTime = 0;
+
+    private static AtomicInteger totalVmMigrateRequestTimes = new AtomicInteger(0);
+
+    private static AtomicInteger totalVmMigratefinishedTimes = new AtomicInteger(0);
 
     private static double totalPower = 0;
 
@@ -23,12 +28,28 @@ public class Counter {
         return fourDecimalPlaces(totalPower / 3600);
     }
 
-    public void addMigrateTime(int times) {
-        totalVmMigrateTimes += times;
+    public void addMigrateRequestTime(int times) {
+        totalVmMigrateRequestTimes.addAndGet(times);
     }
 
-    public int getTotalVmMigratiomTimes() {
-        return totalVmMigrateTimes;
+    public AtomicInteger getTotalVmMigratioRequestTimes() {
+        return totalVmMigrateRequestTimes;
+    }
+
+    public void addMigrateFinishedTime(int times) {
+        totalVmMigratefinishedTimes.addAndGet(times);
+    }
+
+    public AtomicInteger getTotalVmMigratioFinishedTimes() {
+        return totalVmMigratefinishedTimes;
+    }
+
+    public void addTime(long mills) {
+        totalTime += mills;
+    }
+
+    public long getTotalTime() {
+        return totalTime;
     }
 
     public void addOneIterateTime() {

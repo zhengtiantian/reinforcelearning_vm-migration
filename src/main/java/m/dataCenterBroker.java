@@ -1,6 +1,7 @@
 package m;
 
 import m.util.Constant;
+import m.util.Counter;
 import m.util.printer;
 import org.cloudbus.cloudsim.brokers.DatacenterBroker;
 import org.cloudbus.cloudsim.brokers.DatacenterBrokerSimple;
@@ -13,6 +14,7 @@ import org.cloudbus.cloudsim.utilizationmodels.UtilizationModelFull;
 import org.cloudbus.cloudsim.vms.Vm;
 import org.cloudbus.cloudsim.vms.VmSimple;
 import org.cloudsimplus.listeners.CloudletVmEventInfo;
+import org.cloudsimplus.listeners.VmHostEventInfo;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,12 +23,14 @@ public class dataCenterBroker {
 
     private static Constant constant = new Constant();
 
+    private static Counter counter = new Counter();
+
     private int createsVms;
     private List<Cloudlet> cloudletList;
     private List<Vm> vmList;
     private static DatacenterBroker broker;
     private static printer printer = new printer();
-    private static double CREATEVMSINTERVAL = (constant.CLOUDLET_LENGTH / constant.VM_MIPS)/1.25;
+    private static double CREATEVMSINTERVAL = (constant.CLOUDLET_LENGTH / constant.VM_MIPS) / 1.25;
 
     static double[] createVmsRate = new double[]{0.05, 0.1, 0.1, 0.05, 0.25, 0.1, 0.05, 0.05, 0.20, 0.05};
 
@@ -89,8 +93,11 @@ public class dataCenterBroker {
                 .setRam(constant.VM_RAM).setBw(constant.VM_BW).setSize(constant.VM_SIZE).setCloudletScheduler(new CloudletSchedulerTimeShared());
         vm.getUtilizationHistory().enable();
         vm.setSubmissionDelay(submissionDelay);
+        vm.addOnMigrationFinishListener(this::migrationFinish);
+        vm.addOnMigrationStartListener(this::migrationStart);
         return vm;
     }
+
 
     /**
      * create cloudlets
@@ -108,6 +115,13 @@ public class dataCenterBroker {
         return cloudlet;
     }
 
+    private void migrationFinish(VmHostEventInfo vmHostEventInfo) {
+        counter.addMigrateFinishedTime(1);
+    }
+
+    private void migrationStart(VmHostEventInfo vmHostEventInfo) {
+        counter.addMigrateRequestTime(1);
+    }
 
 
 }

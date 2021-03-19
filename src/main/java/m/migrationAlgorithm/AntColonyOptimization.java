@@ -4,6 +4,7 @@ import m.algorithmTool.antColonyOptimization.Ant;
 import m.po.EnvironmentInfo;
 import m.po.Position;
 import m.po.ProcessResult;
+import m.util.Counter;
 import org.cloudbus.cloudsim.hosts.Host;
 import org.cloudbus.cloudsim.vms.Vm;
 
@@ -16,9 +17,11 @@ import java.util.stream.Collectors;
 
 public class AntColonyOptimization extends MigrationTool implements Migration {
 
-    private double MAX_CPU_UTILIZATION_THERSHOLD = 0.8;
+    Counter counter = new Counter();
 
-    private double MIX_CPU_UTILIZATION_THERSHOLD = 0.2;
+    private double MAX_CPU_UTILIZATION_THERSHOLD = 0.7;
+
+    private double MIX_CPU_UTILIZATION_THERSHOLD = 0.3;
 
     private static List<Host> hostList;
 
@@ -53,6 +56,7 @@ public class AntColonyOptimization extends MigrationTool implements Migration {
 
     @Override
     public ProcessResult processMigration(EnvironmentInfo info) {
+        long startTime = System.nanoTime();
         hostList = new ArrayList<>(info.getDatacenter().getHostList());
         hostMap = hostList.stream().collect(Collectors.toMap(Host::getId, Function.identity()));
         vmMap = getAllVm(hostList);
@@ -81,12 +85,13 @@ public class AntColonyOptimization extends MigrationTool implements Migration {
             }
         }
 
-        if(moveOutVms.size()>0 && moveInHosts.size()>0){
+        if (moveOutVms.size() > 0 && moveInHosts.size() > 0) {
             init();
             run();
             getResult();
         }
-
+        long endTime = System.nanoTime();
+        counter.addTime(endTime - startTime);
         ProcessResult pr = new ProcessResult();
         pr.setVmToHostMap(vmToHostMap);
         return pr;
@@ -234,9 +239,9 @@ public class AntColonyOptimization extends MigrationTool implements Migration {
         System.out.println("the length of best path is" + bestLength);
         for (int j = 0; j < moveOutVms.size(); j++) {
             int vmId = bestTour[j].getVmId();
-            Vm vm = vmMap.get((long)vmId);
+            Vm vm = vmMap.get((long) vmId);
             int hostId = bestTour[j].getHostId();
-            Host host = hostMap.get((long)hostId);
+            Host host = hostMap.get((long) hostId);
             vmToHostMap.put(vm, host);
         }
     }

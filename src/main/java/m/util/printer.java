@@ -47,8 +47,12 @@ public class printer {
         System.out.println("Iterate times is :" + counter.getIterateTimes());
     }
 
-    public void printTotalMigrationTimes() {
-        System.out.println("The total number of vms migration is :" + counter.getTotalVmMigratiomTimes());
+    public void printTotalMigrationFinishedTimes() {
+        System.out.println("The total number of finished migration vms migration is :" + counter.getTotalVmMigratioFinishedTimes());
+    }
+
+    public void printTotalMigrationRequestTimes() {
+        System.out.println("The total number of request migration vms migration is :" + counter.getTotalVmMigratioRequestTimes());
     }
 
     private void initialPowerMap(List<Host> hostList) {
@@ -66,6 +70,10 @@ public class printer {
         for (HostViolationRate h : counter.getHostViolationRates()) {
             System.out.println("host:" + h.getHost().getId() + " sla violation rate is " + h.getViolationRate() + "%");
         }
+    }
+
+    public void printTotalTime() {
+        System.out.println("the total time consumed by the algorithm is " + counter.getTotalTime() + " mills");
     }
 
 
