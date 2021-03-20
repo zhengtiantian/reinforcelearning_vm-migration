@@ -85,8 +85,8 @@ public class ReinforcementLearning extends MigrationTool implements Migration {
                     act.updateQtable(state, action, result1.getReward(), nextState);
                     counter.addOneIterateTime();
                     if (result1.isCanDo()) {
-                        updateHostAndTargetHost(host, hostVmsMap, result.getVmsToHosts());
-                        updateMigrationMap(vmToHostMap, result.getVmsToHosts());
+                        updateHostAndTargetHost(host, hostVmsMap, result1.getVmsToHosts());
+                        updateMigrationMap(vmToHostMap, result1.getVmsToHosts());
                         if (action == 2) {
                             shutdownHosts.put(host.getId(), host);
                         }
@@ -168,8 +168,6 @@ public class ReinforcementLearning extends MigrationTool implements Migration {
             pairList.add(vmToHost);
             hostCpuMap.put(host.getId(), hostCpuMap.get(host.getId()) - (constant.PERCENTAGE_OF_ONE_VM_TO_HOST));
             hostCpuMap.put(mostSaving.getKey(), mostSaving.getValue() + (constant.PERCENTAGE_OF_ONE_VM_TO_HOST));
-
-            System.out.println("action 1...host:" + host.getId() + " cpu utilization:" + hostCpuMap.get(host.getId()));
             return createResult(true, pairList, 50.0);
         }
         return createResult(false, null, -20.0);

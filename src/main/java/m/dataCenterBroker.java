@@ -29,10 +29,9 @@ public class dataCenterBroker {
     private List<Cloudlet> cloudletList;
     private List<Vm> vmList;
     private static DatacenterBroker broker;
-    private static printer printer = new printer();
-    private static double CREATEVMSINTERVAL = (constant.CLOUDLET_LENGTH / constant.VM_MIPS) / 1.25;
+    private static double CREATEVMSINTERVAL = (constant.CLOUDLET_LENGTH / constant.VM_MIPS) / 1.5;
 
-    static double[] createVmsRate = new double[]{0.05, 0.1, 0.1, 0.05, 0.25, 0.1, 0.05, 0.05, 0.20, 0.05};
+    static double[] createVmsRate = new double[]{0.066, 0.15, 0.066, 0.15, 0.066, 0.1, 0.066, 0.1, 0.15, 0.066};
 
     /**
      * get data center broker
@@ -44,7 +43,7 @@ public class dataCenterBroker {
         broker = new DatacenterBrokerSimple(simulation);
         vmList = new ArrayList<>(2);
         cloudletList = new ArrayList<>(4);
-        int totalVms = constant.HOSTS * 40;
+        int totalVms = constant.HOSTS * 60;
         for (int i = 0; i < 10; i++) {
             createVmsAndCloudlet((int) (totalVms * createVmsRate[i % 10]), 1, i * CREATEVMSINTERVAL);
         }

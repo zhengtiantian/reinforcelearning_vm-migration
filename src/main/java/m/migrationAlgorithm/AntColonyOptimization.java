@@ -19,9 +19,9 @@ public class AntColonyOptimization extends MigrationTool implements Migration {
 
     Counter counter = new Counter();
 
-    private double MAX_CPU_UTILIZATION_THERSHOLD = 0.8;
+    private double MAX_CPU_UTILIZATION_THERSHOLD = 0.7;
 
-    private double MIX_CPU_UTILIZATION_THERSHOLD = 0.4;
+    private double MIX_CPU_UTILIZATION_THERSHOLD = 0.3;
 
     private static List<Host> hostList;
 
@@ -184,14 +184,14 @@ public class AntColonyOptimization extends MigrationTool implements Migration {
                 }
             }
             for (int i = 0; i < antNum; i++) {
-                System.out.println("number " + i + " ant");
+//                System.out.println("number " + i + " ant");
                 ants.get(i).CalTourLength();
-                System.out.println("number" + i + "ant's path：" + ants.get(i).tourLength);
+//                System.out.println("number" + i + "ant's path：" + ants.get(i).tourLength);
                 ants.get(i).CalDelta();
                 if (ants.get(i).tourLength < bestLength) {
                     //record best path
                     bestLength = ants.get(i).tourLength;
-                    System.out.println(runTime + "times iteration," + "number " + i + "ant discovers new solution：" + bestLength);
+//                    System.out.println(runTime + "times iteration," + "number " + i + "ant discovers new solution：" + bestLength);
                     for (int j = 0; j < moveOutVms.size(); j++) {
                         bestTour[j].setHostId(ants.get(i).tour.get(j).getHostId());
                         bestTour[j].setVmId(ants.get(i).tour.get(j).getVmId());
