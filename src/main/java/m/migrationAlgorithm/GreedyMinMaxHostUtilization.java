@@ -145,5 +145,4 @@ public class GreedyMinMaxHostUtilization extends MigrationTool implements Migrat
     private void updateHostCpuMap(Host host, double utilizaiont) {
         hostCpuMap.put(host.getId(), utilizaiont);
     }
-
 }

@@ -332,5 +332,4 @@ public class ReinforcementLearning extends MigrationTool implements Migration {
             hostCpuMap.put(hostAndCpuUtilization.getHostId(), hostAndCpuUtilization.getCpuUtilization());
         }
     }
-
 }

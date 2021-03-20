@@ -245,6 +245,4 @@ public class AntColonyOptimization extends MigrationTool implements Migration {
             vmToHostMap.put(vm, host);
         }
     }
-
-
 }

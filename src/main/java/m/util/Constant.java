@@ -16,7 +16,7 @@ public class Constant {
     /**
      * total memory of single host
      */
-    public static final long HOST_RAM = 131072; //in Megabytes
+    public static final long HOST_RAM = 65536; //in Megabytes
     /**
      * total internet bandwidth of single host
      */
@@ -24,7 +24,7 @@ public class Constant {
     /**
      * total storage of single host
      */
-    public static final long HOST_STORAGE = 10240000; //in Megabytes
+    public static final long HOST_STORAGE = 4194304; //in Megabytes
     /**
      * Defines the power a Host uses, even if it's idle (in Watts).
      */
@@ -33,7 +33,7 @@ public class Constant {
     /**
      * The max power a Host uses (in Watts).
      */
-    public static final double HOST_MAX_POWER = 340;
+    public static final double HOST_MAX_POWER = 350;
 
     /**
      * total cores of single vm

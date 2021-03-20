@@ -2,7 +2,6 @@ package m;
 
 import m.util.Constant;
 import m.util.Counter;
-import m.util.printer;
 import org.cloudbus.cloudsim.brokers.DatacenterBroker;
 import org.cloudbus.cloudsim.brokers.DatacenterBrokerSimple;
 import org.cloudbus.cloudsim.cloudlets.Cloudlet;
