@@ -19,9 +19,9 @@ public class AntColonyOptimization extends MigrationTool implements Migration {
 
     Counter counter = new Counter();
 
-    private double MAX_CPU_UTILIZATION_THERSHOLD = 0.7;
+    private double MAX_CPU_UTILIZATION_THERSHOLD = 0.6;
 
-    private double MIX_CPU_UTILIZATION_THERSHOLD = 0.3;
+    private double MIX_CPU_UTILIZATION_THERSHOLD = 0.4;
 
     private static List<Host> hostList;
 

@@ -90,18 +90,19 @@ public class agent {
      * start simulation and get the information from the environment each second then put the information into the queue.
      */
     public void startSimulation() {
-        try {
+
             envirnment.start();
             QTable.iniQtable();
             while (simulation.isRunning()) {
+                try {
                 simulation.runFor(constant.SIMULATION_RUNNING_INTERVAL);
                 waitSomeMillis((long) constant.SIMULATION_RUNNING_INTERVAL * 1000);
+                } catch (Exception e) {
+                    System.out.println("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++" +
+                            "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+                    e.printStackTrace();
+                }
             }
-        } catch (Exception e) {
-            System.out.println("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++" +
-                    "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
-            e.printStackTrace();
-        }
 
     }
 

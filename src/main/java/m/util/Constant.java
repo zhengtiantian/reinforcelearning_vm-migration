@@ -8,7 +8,7 @@ public class Constant {
     /**
      * total hosts
      */
-    public static final int HOSTS = 20;
+    public static final int HOSTS = 100;
     /**
      * total core of single host
      */
@@ -16,7 +16,7 @@ public class Constant {
     /**
      * total memory of single host
      */
-    public static final long HOST_RAM = 65536; //in Megabytes
+    public static final long HOST_RAM = 131072; //in Megabytes
     /**
      * total internet bandwidth of single host
      */
