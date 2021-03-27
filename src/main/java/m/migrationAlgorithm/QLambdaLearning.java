@@ -13,7 +13,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 
-public class ReinforcementLearning extends MigrationTools implements Migration {
+public class QLambdaLearning extends MigrationTools implements Migration {
     /**
      * get the implement of m.migrationAlgorithm.actuator
      */
