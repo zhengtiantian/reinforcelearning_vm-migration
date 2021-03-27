@@ -8,7 +8,7 @@ import org.cloudbus.cloudsim.vms.Vm;
 
 import java.util.*;
 
-public abstract class MigrationTool {
+public abstract class MigrationTools {
 
     Constant constant = new Constant();
 

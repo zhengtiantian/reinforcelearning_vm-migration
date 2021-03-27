@@ -15,7 +15,7 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class AntColonyOptimization extends MigrationTool implements Migration {
+public class AntColonyOptimization extends MigrationTools implements Migration {
 
     Counter counter = new Counter();
 

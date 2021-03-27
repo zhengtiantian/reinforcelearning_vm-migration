@@ -1,8 +1,6 @@
 package m.util;
 
-import m.dataCenter;
-import m.envirnment;
-import m.po.HostViolationRate;
+import m.environment;
 import org.cloudbus.cloudsim.datacenters.Datacenter;
 import org.cloudbus.cloudsim.hosts.Host;
 import org.cloudbus.cloudsim.hosts.HostStateHistoryEntry;
@@ -19,7 +17,7 @@ public class printer {
 
     private static Counter counter = new Counter();
 
-    private static envirnment envirnment = new envirnment();
+    private static environment environment = new environment();
 
 
     public void recordPowerConsumption(Datacenter datacenter, int time, int lastTime) {
@@ -64,7 +62,7 @@ public class printer {
     }
 
     public void printHostsSlaViolation() {
-        List<Host> hostList = envirnment.getDatacenter().getHostList();
+        List<Host> hostList = environment.getDatacenter().getHostList();
         System.out.println("sla violation rate accroding to time is:" + counter.getSlaTimePerActiveHost(hostList) + "%");
         System.out.println("averate sla violation rate is :" + counter.getAverageSlaViotationRate(hostList) + "%");
 //        for (HostViolationRate h : counter.getHostViolationRates()) {

@@ -11,7 +11,7 @@ import org.cloudsimplus.listeners.EventInfo;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 
-public class envirnment {
+public class environment {
 
     private static Constant constant = new Constant();
     private static CloudSim simulation = new CloudSim();

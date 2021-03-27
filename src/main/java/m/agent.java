@@ -3,12 +3,9 @@ package m;
 import ch.qos.logback.classic.Level;
 import m.algorithmTool.reinforcementLearning.QTable;
 import m.migrationAlgorithm.AntColonyOptimization;
-import m.migrationAlgorithm.GreedyMinMaxHostUtilization;
 import m.migrationAlgorithm.Migration;
-import m.migrationAlgorithm.ReinforcementLearning;
 import m.po.ProcessResult;
 import m.util.Constant;
-import m.util.Counter;
 import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.hosts.Host;
 import org.cloudbus.cloudsim.vms.Vm;
@@ -30,12 +27,12 @@ public class agent {
     /**
      * get the implement of environment
      */
-    private static envirnment envirnment = new envirnment();
+    private static environment environment = new environment();
 
     /**
      * get the simulation
      */
-    private static final CloudSim simulation = envirnment.getSimulation();
+    private static final CloudSim simulation = environment.getSimulation();
 
     private static Constant constant = new Constant();
 
@@ -46,7 +43,7 @@ public class agent {
     private static Migration migrate = new AntColonyOptimization();
 
 
-    private static ConcurrentLinkedQueue<EnvironmentInfo> queue = envirnment.getQueue();
+    private static ConcurrentLinkedQueue<EnvironmentInfo> queue = environment.getQueue();
 
     /**
      * main function create two threads
@@ -91,7 +88,7 @@ public class agent {
      */
     public void startSimulation() {
 
-            envirnment.start();
+            environment.start();
             QTable.iniQtable();
             while (simulation.isRunning()) {
                 try {
@@ -149,7 +146,7 @@ public class agent {
                 if (vm == null || host == null) {
                     continue;
                 }
-                envirnment.getDatacenter().requestVmMigration(vm, host);
+                environment.getDatacenter().requestVmMigration(vm, host);
             }
         }
     }
