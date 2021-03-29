@@ -8,7 +8,7 @@ public class Constant {
     /**
      * total hosts
      */
-    public static final int HOSTS = 100;
+    public static final int HOSTS = 20;
     /**
      * total core of single host
      */
